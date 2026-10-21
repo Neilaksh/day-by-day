@@ -41,7 +41,7 @@ export function AuthCard() {
     if (error) setError(error.message);
   }
 
-  async function social(provider: "google" | "lovable") {
+  async function social(provider: "google") {
     setError(null);
     const result = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin,
@@ -136,13 +136,6 @@ export function AuthCard() {
             className="w-full rounded-sm border border-foreground/20 bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
           >
             Continue with Google
-          </button>
-          <button
-            type="button"
-            onClick={() => social("lovable")}
-            className="w-full rounded-sm border border-foreground/20 bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
-          >
-            Continue with Lovable
           </button>
         </div>
       </div>
