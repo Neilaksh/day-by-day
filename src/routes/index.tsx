@@ -1,9 +1,13 @@
+import { lazy, Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
-import { AuthCard } from "@/components/AuthCard";
-import { TrackerBoard } from "@/components/TrackerBoard";
 import { ThemeToggle } from "@/components/ThemeToggle";
+
+const TrackerBoard = lazy(() =>
+  import("@/components/TrackerBoard").then((m) => ({ default: m.TrackerBoard })),
+);
+const AuthCard = lazy(() => import("@/components/AuthCard").then((m) => ({ default: m.AuthCard })));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,10 +61,14 @@ function Index() {
       <main>
         {loading ? (
           <p className="py-32 text-center font-mono text-sm text-muted-foreground">Loading…</p>
-        ) : session ? (
-          <TrackerBoard userId={session.user.id} />
         ) : (
-          <AuthCard />
+          <Suspense
+            fallback={
+              <p className="py-32 text-center font-mono text-sm text-muted-foreground">Loading…</p>
+            }
+          >
+            {session ? <TrackerBoard userId={session.user.id} /> : <AuthCard />}
+          </Suspense>
         )}
       </main>
 

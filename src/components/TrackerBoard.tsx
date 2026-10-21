@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Printer } from "lucide-react";
 import { toast } from "sonner";
@@ -10,12 +10,144 @@ const dateKey = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`;
 const WEEKDAYS = ["Su", "M", "T", "W", "Th", "F", "Sa"];
 const SLEEP_ROWS = [9, 8, 7, 6, 5];
 const SEED_COUNT = 12;
+const EMPTY_SET = new Set<string>();
+
+interface ProtocolRowProps {
+  protocol: Protocol;
+  dates: string[];
+  todayKey: string;
+  gridTemplate: string;
+  checkedDates: Set<string>;
+  onToggle: (protocolId: string, date: string) => void;
+  onRename: (protocolId: string, label: string) => void;
+  onDelete: (protocolId: string) => void;
+}
+
+const ProtocolRow = memo(function ProtocolRow({
+  protocol,
+  dates,
+  todayKey,
+  gridTemplate,
+  checkedDates,
+  onToggle,
+  onRename,
+  onDelete,
+}: ProtocolRowProps) {
+  const [label, setLabel] = useState(protocol.label);
+
+  useEffect(() => {
+    setLabel(protocol.label);
+  }, [protocol.label]);
+
+  const handleBlur = () => {
+    const trimmed = label.trim();
+    if (trimmed && trimmed !== protocol.label) {
+      onRename(protocol.id, trimmed);
+    } else if (!trimmed) {
+      setLabel(protocol.label);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    }
+  };
+
+  const completedDays = checkedDates?.size ?? 0;
+
+  return (
+    <div
+      className="group grid border-b border-border/70 last:border-b-0"
+      style={{ gridTemplateColumns: gridTemplate }}
+    >
+      <div className="flex items-center gap-1 border-r border-border/70 px-2 pl-4">
+        <input
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          aria-label="Protocol name"
+          className="w-full rounded-sm bg-transparent px-1 py-1 text-sm outline-none focus:bg-secondary/70"
+        />
+        <span
+          className="shrink-0 font-mono text-[10px] text-muted-foreground/75 tabular-nums print:text-foreground"
+          title={`${completedDays} of ${dates.length} days`}
+        >
+          {completedDays}d
+        </span>
+        <button
+          onClick={() => onDelete(protocol.id)}
+          aria-label={`Delete ${protocol.label}`}
+          className="print:hidden opacity-0 transition-opacity group-hover:opacity-100 grid size-6 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        >
+          ×
+        </button>
+      </div>
+      {dates.map((d) => {
+        const checked = checkedDates?.has(d) ?? false;
+        return (
+          <button
+            key={d}
+            onClick={() => onToggle(protocol.id, d)}
+            aria-label={`${protocol.label} on ${d}`}
+            aria-pressed={checked}
+            className={`grid-cell ${checked ? "grid-cell-checked" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
+          >
+            {checked ? "✓" : ""}
+          </button>
+        );
+      })}
+    </div>
+  );
+});
+
+interface SleepRowProps {
+  hours: number;
+  dates: string[];
+  todayKey: string;
+  gridTemplate: string;
+  activeDates: Set<string>;
+  onSetSleep: (date: string, hours: number) => void;
+}
+
+const SleepRow = memo(function SleepRow({
+  hours,
+  dates,
+  todayKey,
+  gridTemplate,
+  activeDates,
+  onSetSleep,
+}: SleepRowProps) {
+  return (
+    <div
+      className="grid border-b border-border/70 last:border-b-0"
+      style={{ gridTemplateColumns: gridTemplate }}
+    >
+      <div className="flex items-center border-r border-border/70 px-4 font-mono text-xs text-muted-foreground">
+        {hours}hrs
+      </div>
+      {dates.map((d) => {
+        const active = activeDates.has(d);
+        return (
+          <button
+            key={d}
+            onClick={() => onSetSleep(d, hours)}
+            aria-label={`${hours} hours of sleep on ${d}`}
+            aria-pressed={active}
+            className={`grid-cell ${active ? "grid-cell-sleep" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
+          />
+        );
+      })}
+    </div>
+  );
+});
 
 export function TrackerBoard({ userId }: { userId: string }) {
   const now = new Date();
   const [view, setView] = useState({ y: now.getFullYear(), m: now.getMonth() + 1 });
   const [protocols, setProtocols] = useState<Protocol[]>([]);
-  const [checks, setChecks] = useState<Set<string>>(new Set());
+  const [checks, setChecks] = useState<Map<string, Set<string>>>(new Map());
   const [sleep, setSleep] = useState<Map<string, number>>(new Map());
   const [note, setNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
@@ -31,21 +163,35 @@ export function TrackerBoard({ userId }: { userId: string }) {
   const todayKey = dateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
   const isCurrentMonth = view.y === now.getFullYear() && view.m === now.getMonth() + 1;
 
-  const monthLabel = new Date(view.y, view.m - 1, 1).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = useMemo(
+    () =>
+      new Date(view.y, view.m - 1, 1).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      }),
+    [view.y, view.m],
+  );
 
-  function shiftMonth(delta: number) {
+  const shiftMonth = useCallback((delta: number) => {
     setView((v) => {
       const d = new Date(v.y, v.m - 1 + delta, 1);
       return { y: d.getFullYear(), m: d.getMonth() + 1 };
     });
-  }
+  }, []);
 
-  function goToToday() {
-    setView({ y: now.getFullYear(), m: now.getMonth() + 1 });
-  }
+  const goToToday = useCallback(() => {
+    const today = new Date();
+    setView({ y: today.getFullYear(), m: today.getMonth() + 1 });
+  }, []);
+
+  // Cleanup pending note saving timer when switching months or unmounting
+  useEffect(() => {
+    return () => {
+      if (noteTimer.current) {
+        clearTimeout(noteTimer.current);
+      }
+    };
+  }, [monthKey]);
 
   // Load (or seed) all data for the visible month
   useEffect(() => {
@@ -98,14 +244,23 @@ export function TrackerBoard({ userId }: { userId: string }) {
       }
 
       if (cancelled) return;
+
+      // Group checks by protocol_id -> Set<entry_date>
+      const checkMap = new Map<string, Set<string>>();
+      for (const p of protoList) {
+        checkMap.set(p.id, new Set<string>());
+      }
+      for (const r of checkRes.data ?? []) {
+        let set = checkMap.get(r.protocol_id);
+        if (!set) {
+          set = new Set<string>();
+          checkMap.set(r.protocol_id, set);
+        }
+        set.add(r.entry_date);
+      }
+
       setProtocols(protoList);
-      setChecks(
-        new Set(
-          (checkRes.data ?? []).map(
-            (r: { protocol_id: string; entry_date: string }) => `${r.protocol_id}|${r.entry_date}`,
-          ),
-        ),
-      );
+      setChecks(checkMap);
       setSleep(
         new Map(
           (sleepRes.data ?? []).map((r: { entry_date: string; hours: number }) => [
@@ -122,110 +277,190 @@ export function TrackerBoard({ userId }: { userId: string }) {
     };
   }, [userId, monthKey, daysInMonth, view.y, view.m]);
 
-  function toggleCheck(protocolId: string, date: string) {
-    const key = `${protocolId}|${date}`;
-    const has = checks.has(key);
-    setChecks((prev) => {
-      const next = new Set(prev);
-      if (has) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-    if (has) {
-      supabase
-        .from("protocol_checks")
-        .delete()
-        .eq("protocol_id", protocolId)
-        .eq("entry_date", date);
-    } else {
-      supabase
-        .from("protocol_checks")
-        .upsert(
-          { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
-          { onConflict: "protocol_id,entry_date" },
-        );
-    }
-  }
+  const toggleCheck = useCallback(
+    (protocolId: string, date: string) => {
+      let isDone = false;
+      setChecks((prev) => {
+        const next = new Map(prev);
+        const currentSet = next.get(protocolId) ?? new Set<string>();
+        const updatedSet = new Set(currentSet);
+        if (updatedSet.has(date)) {
+          updatedSet.delete(date);
+          isDone = false;
+        } else {
+          updatedSet.add(date);
+          isDone = true;
+        }
+        next.set(protocolId, updatedSet);
+        return next;
+      });
 
-  function setSleepDay(date: string, hours: number) {
-    const current = sleep.get(date);
-    const same = current === hours;
-    setSleep((prev) => {
-      const next = new Map(prev);
-      if (same) next.delete(date);
-      else next.set(date, hours);
-      return next;
-    });
-    if (same) {
-      supabase.from("sleep_logs").delete().eq("user_id", userId).eq("entry_date", date);
-    } else {
-      supabase
-        .from("sleep_logs")
-        .upsert({ user_id: userId, entry_date: date, hours }, { onConflict: "user_id,entry_date" });
-    }
-  }
+      if (!isDone) {
+        supabase
+          .from("protocol_checks")
+          .delete()
+          .eq("protocol_id", protocolId)
+          .eq("entry_date", date);
+      } else {
+        supabase
+          .from("protocol_checks")
+          .upsert(
+            { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
+            { onConflict: "protocol_id,entry_date" },
+          );
+      }
+    },
+    [userId],
+  );
 
-  function renameProtocol(id: string, label: string) {
-    const row = protocols.find((p) => p.id === id);
-    if (!row || row.label === label) return;
+  const setSleepDay = useCallback(
+    (date: string, hours: number) => {
+      let isRemoved = false;
+      setSleep((prev) => {
+        const next = new Map(prev);
+        if (next.get(date) === hours) {
+          next.delete(date);
+          isRemoved = true;
+        } else {
+          next.set(date, hours);
+          isRemoved = false;
+        }
+        return next;
+      });
+
+      if (isRemoved) {
+        supabase.from("sleep_logs").delete().eq("user_id", userId).eq("entry_date", date);
+      } else {
+        supabase
+          .from("sleep_logs")
+          .upsert(
+            { user_id: userId, entry_date: date, hours },
+            { onConflict: "user_id,entry_date" },
+          );
+      }
+    },
+    [userId],
+  );
+
+  const renameProtocol = useCallback((id: string, label: string) => {
     setProtocols((prev) => prev.map((p) => (p.id === id ? { ...p, label } : p)));
     supabase.from("protocols").update({ label }).eq("id", id);
-  }
+  }, []);
 
-  async function addProtocol() {
-    const label = `Protocol ${protocols.length + 1}`;
+  const addProtocol = useCallback(async () => {
+    const nextPos = protocols.length;
+    const label = `Protocol ${nextPos + 1}`;
     const { data, error } = await supabase
       .from("protocols")
-      .insert({ user_id: userId, label, position: protocols.length })
+      .insert({ user_id: userId, label, position: nextPos })
       .select("id,label,position");
     if (!error && data) {
-      setProtocols((prev) => [...prev, ...(data as Protocol[])]);
+      const added = data as Protocol[];
+      setProtocols((prev) => [...prev, ...added]);
+      setChecks((prev) => {
+        const next = new Map(prev);
+        for (const p of added) next.set(p.id, new Set<string>());
+        return next;
+      });
       toast.success("Protocol added");
     }
-  }
+  }, [userId, protocols.length]);
 
-  function deleteProtocol(id: string) {
-    const target = protocols.find((p) => p.id === id);
-    setProtocols((prev) => prev.filter((p) => p.id !== id));
-    setChecks((prev) => new Set([...prev].filter((k) => !k.startsWith(`${id}|`))));
-    supabase.from("protocols").delete().eq("id", id);
-    toast.info(`Deleted ${target?.label || "protocol"}`);
-  }
+  const deleteProtocol = useCallback(
+    (id: string) => {
+      const target = protocols.find((p) => p.id === id);
+      setProtocols((prev) => prev.filter((p) => p.id !== id));
+      setChecks((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
+      supabase.from("protocols").delete().eq("id", id);
+      toast.info(`Deleted ${target?.label || "protocol"}`);
+    },
+    [protocols],
+  );
 
-  function saveNote(value: string) {
-    setNote(value);
-    setSavingNote(true);
-    clearTimeout(noteTimer.current);
-    noteTimer.current = setTimeout(async () => {
-      await supabase.from("month_notes").upsert(
-        {
-          user_id: userId,
-          month_key: monthKey,
-          note: value,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,month_key" },
-      );
-      setSavingNote(false);
-    }, 700);
-  }
+  const saveNote = useCallback(
+    (value: string) => {
+      setNote(value);
+      setSavingNote(true);
+      if (noteTimer.current) clearTimeout(noteTimer.current);
+      noteTimer.current = setTimeout(async () => {
+        await supabase.from("month_notes").upsert(
+          {
+            user_id: userId,
+            month_key: monthKey,
+            note: value,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,month_key" },
+        );
+        setSavingNote(false);
+      }, 700);
+    },
+    [userId, monthKey],
+  );
 
-  const totalPoints = checks.size;
-  const todayPoints = protocols.filter((p) => checks.has(`${p.id}|${todayKey}`)).length;
-  const todayRate = protocols.length ? Math.round((todayPoints / protocols.length) * 100) : 0;
-  const perfectDays = protocols.length
-    ? dates.filter((d) => protocols.every((p) => checks.has(`${p.id}|${d}`))).length
-    : 0;
-  const sleepValues = [...sleep.values()];
-  const avgSleep = sleepValues.length
-    ? (sleepValues.reduce((a, b) => a + b, 0) / sleepValues.length).toFixed(1)
-    : null;
+  // Single-pass computation of all metrics and daily points
+  const { dailyPoints, totalPoints, todayPoints, todayRate, perfectDays, avgSleep } =
+    useMemo(() => {
+      const daily = new Map<string, number>();
+      for (const d of dates) daily.set(d, 0);
+
+      let total = 0;
+      for (const [, dateSet] of checks) {
+        total += dateSet.size;
+        for (const d of dateSet) {
+          if (daily.has(d)) {
+            daily.set(d, (daily.get(d) ?? 0) + 1);
+          }
+        }
+      }
+
+      let perfect = 0;
+      const numProtocols = protocols.length;
+      if (numProtocols > 0) {
+        for (const d of dates) {
+          if ((daily.get(d) ?? 0) === numProtocols) {
+            perfect++;
+          }
+        }
+      }
+
+      const tPoints = daily.get(todayKey) ?? 0;
+      const tRate = numProtocols ? Math.round((tPoints / numProtocols) * 100) : 0;
+
+      const sleepVals = [...sleep.values()];
+      const averageSleep = sleepVals.length
+        ? (sleepVals.reduce((a, b) => a + b, 0) / sleepVals.length).toFixed(1)
+        : null;
+
+      return {
+        dailyPoints: daily,
+        totalPoints: total,
+        todayPoints: tPoints,
+        todayRate: tRate,
+        perfectDays: perfect,
+        avgSleep: averageSleep,
+      };
+    }, [checks, protocols.length, dates, todayKey, sleep]);
+
+  // Pre-index sleep dates by hour row for instant lookups
+  const sleepByHour = useMemo(() => {
+    const map = new Map<number, Set<string>>();
+    for (const h of SLEEP_ROWS) map.set(h, new Set<string>());
+    for (const [d, h] of sleep) {
+      map.get(h)?.add(d);
+    }
+    return map;
+  }, [sleep]);
 
   const gridTemplate = `12rem repeat(${daysInMonth}, minmax(2.1rem, 1fr))`;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      {/* Month navigation */}
+      {/* Month navigation & stats */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <button
@@ -337,57 +572,19 @@ export function TrackerBoard({ userId }: { userId: string }) {
                 ))}
               </div>
 
-              {protocols.map((p) => {
-                const completedDays = dates.filter((d) => checks.has(`${p.id}|${d}`)).length;
-                return (
-                  <div
-                    key={p.id}
-                    className="group grid border-b border-border/70 last:border-b-0"
-                    style={{ gridTemplateColumns: gridTemplate }}
-                  >
-                    <div className="flex items-center gap-1 border-r border-border/70 px-2 pl-4">
-                      <input
-                        value={p.label}
-                        onChange={(e) =>
-                          setProtocols((prev) =>
-                            prev.map((q) => (q.id === p.id ? { ...q, label: e.target.value } : q)),
-                          )
-                        }
-                        onBlur={(e) => renameProtocol(p.id, e.target.value)}
-                        aria-label="Protocol name"
-                        className="w-full rounded-sm bg-transparent px-1 py-1 text-sm outline-none focus:bg-secondary/70"
-                      />
-                      <span
-                        className="shrink-0 font-mono text-[10px] text-muted-foreground/75 tabular-nums print:text-foreground"
-                        title={`${completedDays} of ${daysInMonth} days`}
-                      >
-                        {completedDays}d
-                      </span>
-                      <button
-                        onClick={() => deleteProtocol(p.id)}
-                        aria-label={`Delete ${p.label}`}
-                        className="print:hidden opacity-0 transition-opacity group-hover:opacity-100 grid size-6 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        ×
-                      </button>
-                    </div>
-                    {dates.map((d) => {
-                      const checked = checks.has(`${p.id}|${d}`);
-                      return (
-                        <button
-                          key={d}
-                          onClick={() => toggleCheck(p.id, d)}
-                          aria-label={`${p.label} on ${d}`}
-                          aria-pressed={checked}
-                          className={`grid-cell ${checked ? "grid-cell-checked" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
-                        >
-                          {checked ? "✓" : ""}
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+              {protocols.map((p) => (
+                <ProtocolRow
+                  key={p.id}
+                  protocol={p}
+                  dates={dates}
+                  todayKey={todayKey}
+                  gridTemplate={gridTemplate}
+                  checkedDates={checks.get(p.id) ?? EMPTY_SET}
+                  onToggle={toggleCheck}
+                  onRename={renameProtocol}
+                  onDelete={deleteProtocol}
+                />
+              ))}
 
               {/* Total points row */}
               <div className="grid bg-muted/60" style={{ gridTemplateColumns: gridTemplate }}>
@@ -399,7 +596,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
                     key={d}
                     className={`grid-cell cursor-default border-b-0 border-l-0 ${d === todayKey ? "grid-cell-today" : ""}`}
                   >
-                    {protocols.filter((p) => checks.has(`${p.id}|${d}`)).length}
+                    {dailyPoints.get(d) ?? 0}
                   </div>
                 ))}
               </div>
@@ -429,27 +626,15 @@ export function TrackerBoard({ userId }: { userId: string }) {
                 ))}
               </div>
               {SLEEP_ROWS.map((hours) => (
-                <div
+                <SleepRow
                   key={hours}
-                  className="grid border-b border-border/70 last:border-b-0"
-                  style={{ gridTemplateColumns: gridTemplate }}
-                >
-                  <div className="flex items-center border-r border-border/70 px-4 font-mono text-xs text-muted-foreground">
-                    {hours}hrs
-                  </div>
-                  {dates.map((d) => {
-                    const active = sleep.get(d) === hours;
-                    return (
-                      <button
-                        key={d}
-                        onClick={() => setSleepDay(d, hours)}
-                        aria-label={`${hours} hours of sleep on ${d}`}
-                        aria-pressed={active}
-                        className={`grid-cell ${active ? "grid-cell-sleep" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
-                      />
-                    );
-                  })}
-                </div>
+                  hours={hours}
+                  dates={dates}
+                  todayKey={todayKey}
+                  gridTemplate={gridTemplate}
+                  activeDates={sleepByHour.get(hours) ?? EMPTY_SET}
+                  onSetSleep={setSleepDay}
+                />
               ))}
             </div>
           </div>
