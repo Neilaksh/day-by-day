@@ -141,7 +141,11 @@
     /* Faint graph-paper texture behind everything */
     background-image:
       linear-gradient(color-mix(in oklab, var(--grid-line) 55%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in oklab, var(--grid-line) 55%, transparent) 1px, transparent 1px);
+      linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--grid-line) 55%, transparent) 1px,
+        transparent 1px
+      );
     background-size: 32px 32px;
   }
 }
@@ -165,5 +169,36 @@
   }
   .grid-cell-today {
     @apply ring-1 ring-inset ring-ring/70;
+  }
+}
+
+@media print {
+  body {
+    background-image: none !important;
+    background-color: #fff !important;
+    color: #000 !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+  .grid-cell {
+    border-color: #d1d5db !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .grid-cell-checked {
+    background-color: #15803d !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .grid-cell-sleep {
+    background-color: #d97706 !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

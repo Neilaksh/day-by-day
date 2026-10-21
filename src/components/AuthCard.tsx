@@ -30,7 +30,9 @@ export function AuthCard() {
         return;
       }
       if (!data.session) {
-        setNotice("Almost there — check your inbox and click the confirmation link to activate your account.");
+        setNotice(
+          "Almost there — check your inbox and click the confirmation link to activate your account.",
+        );
         return;
       }
       return;
@@ -53,12 +55,15 @@ export function AuthCard() {
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-6xl flex-col items-center justify-center px-4 py-16">
       <div className="mb-10 text-center">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">31 Day Dashboard</p>
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
+          31 Day Dashboard
+        </p>
         <h2 className="mt-3 font-display text-4xl font-black italic tracking-tight sm:text-5xl">
           Getting 1% Better Each Day
         </h2>
         <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground">
-          Track your daily protocols, total points and sleep — one month, one grid, one percent at a time.
+          Track your daily protocols, total points and sleep — one month, one grid, one percent at a
+          time.
         </p>
       </div>
 
@@ -66,14 +71,22 @@ export function AuthCard() {
         <div className="mb-5 flex gap-1 rounded-sm border border-border bg-muted p-1 font-mono text-xs">
           <button
             type="button"
-            onClick={() => { setMode("signin"); setError(null); setNotice(null); }}
+            onClick={() => {
+              setMode("signin");
+              setError(null);
+              setNotice(null);
+            }}
             className={`flex-1 rounded-sm px-3 py-1.5 transition-colors ${mode === "signin" ? "bg-card font-semibold shadow-sm" : "text-muted-foreground"}`}
           >
             Sign in
           </button>
           <button
             type="button"
-            onClick={() => { setMode("signup"); setError(null); setNotice(null); }}
+            onClick={() => {
+              setMode("signup");
+              setError(null);
+              setNotice(null);
+            }}
             className={`flex-1 rounded-sm px-3 py-1.5 transition-colors ${mode === "signup" ? "bg-card font-semibold shadow-sm" : "text-muted-foreground"}`}
           >
             Create account
@@ -82,7 +95,10 @@ export function AuthCard() {
 
         <form onSubmit={submit} className="space-y-3">
           <div>
-            <label htmlFor="auth-email" className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+            <label
+              htmlFor="auth-email"
+              className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-muted-foreground"
+            >
               Email
             </label>
             <input
@@ -96,7 +112,10 @@ export function AuthCard() {
             />
           </div>
           <div>
-            <label htmlFor="auth-password" className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+            <label
+              htmlFor="auth-password"
+              className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-muted-foreground"
+            >
               Password
             </label>
             <input
