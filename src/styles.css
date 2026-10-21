@@ -170,6 +170,26 @@
   .grid-cell-today {
     @apply ring-1 ring-inset ring-ring/70;
   }
+
+  /* Remove and hide Lovable badge from all screens */
+  #lovable-badge,
+  [id*="lovable-badge"],
+  [class*="lovable-badge"],
+  [data-lovable-badge],
+  a[href*="lovable.dev"][target="_blank"],
+  a[href*="lovable.dev/projects"],
+  div:has(> a[href*="lovable.dev"]) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
 }
 
 @media print {
