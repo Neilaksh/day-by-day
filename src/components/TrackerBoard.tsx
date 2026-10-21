@@ -2,6 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Printer } from "lucide-react";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileTrackerView } from "./MobileTrackerView";
 
 type Protocol = { id: string; label: string; position: number };
 
@@ -483,6 +485,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
   }, [sleep]);
 
   const gridTemplate = `12rem repeat(${daysInMonth}, minmax(2.1rem, 1fr))`;
+  const isMobile = useIsMobile();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -554,7 +557,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
             type="button"
             onClick={() => window.print()}
             aria-label="Print monthly tracker"
-            className="print:hidden inline-flex items-center gap-1.5 rounded-sm border border-foreground/15 bg-card px-2.5 py-1.5 font-mono text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="print:hidden hidden md:inline-flex items-center gap-1.5 rounded-sm border border-foreground/15 bg-card px-2.5 py-1.5 font-mono text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             title="Print or export tracker sheet"
           >
             <Printer className="size-3.5" />
@@ -563,7 +566,29 @@ export function TrackerBoard({ userId }: { userId: string }) {
         </div>
       </div>
 
-      {loading ? (
+      {isMobile ? (
+        <MobileTrackerView
+          protocols={protocols}
+          dates={dates}
+          todayKey={todayKey}
+          checks={checks}
+          sleep={sleep}
+          onToggle={toggleCheck}
+          onSetSleep={setSleepDay}
+          totalPoints={totalPoints}
+          todayPoints={todayPoints}
+          todayRate={todayRate}
+          perfectDays={perfectDays}
+          avgSleep={avgSleep}
+          loading={loading}
+          note={note}
+          savingNote={savingNote}
+          onSaveNote={saveNote}
+          onAddProtocol={addProtocol}
+          onDeleteProtocol={deleteProtocol}
+          onRenameProtocol={renameProtocol}
+        />
+      ) : loading ? (
         <p className="py-24 text-center font-mono text-sm text-muted-foreground">
           Loading your dashboard…
         </p>
