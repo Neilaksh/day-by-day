@@ -14,7 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      month_notes: {
+        Row: {
+          month_key: string
+          note: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          month_key: string
+          note?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          month_key?: string
+          note?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      protocol_checks: {
+        Row: {
+          done: boolean
+          entry_date: string
+          id: string
+          protocol_id: string
+          user_id: string
+        }
+        Insert: {
+          done?: boolean
+          entry_date: string
+          id?: string
+          protocol_id: string
+          user_id: string
+        }
+        Update: {
+          done?: boolean
+          entry_date?: string
+          id?: string
+          protocol_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protocol_checks_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      protocols: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          position: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          position?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          position?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sleep_logs: {
+        Row: {
+          entry_date: string
+          hours: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          entry_date: string
+          hours: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          entry_date?: string
+          hours?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
