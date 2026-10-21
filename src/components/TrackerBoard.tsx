@@ -279,7 +279,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
               {/* Total points row */}
               <div className="grid bg-muted/60" style={{ gridTemplateColumns: gridTemplate }}>
                 <div className="border-r border-border/70 px-4 py-2 font-display text-sm font-bold">Total Points</div>
-                {dates.map((d, i) => (
+                {dates.map((d) => (
                   <div
                     key={d}
                     className={`grid-cell cursor-default border-b-0 border-l-0 ${d === todayKey ? "grid-cell-today" : ""}`}
