@@ -379,16 +379,32 @@ export function TrackerBoard({ userId }: { userId: string }) {
   const deleteProtocol = useCallback(
     (id: string) => {
       const target = protocols.find((p) => p.id === id);
+      // Optimistically remove from UI
       setProtocols((prev) => prev.filter((p) => p.id !== id));
       setChecks((prev) => {
         const next = new Map(prev);
         next.delete(id);
         return next;
       });
-      supabase.from("protocols").delete().eq("id", id);
-      toast.info(`Deleted ${target?.label || "protocol"}`);
+      supabase
+        .from("protocols")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId)
+        .then(({ error }) => {
+          if (error) {
+            console.error("deleteProtocol:", error);
+            // Revert on failure
+            if (target) {
+              setProtocols((prev) => [...prev, target].sort((a, b) => a.position - b.position));
+            }
+            toast.error("Failed to delete protocol");
+          } else {
+            toast.info(`Deleted ${target?.label || "protocol"}`);
+          }
+        });
     },
-    [protocols],
+    [protocols, userId],
   );
 
   const saveNote = useCallback(
