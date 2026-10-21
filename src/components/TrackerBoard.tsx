@@ -284,7 +284,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
                     key={d}
                     className={`grid-cell cursor-default border-b-0 border-l-0 ${d === todayKey ? "grid-cell-today" : ""}`}
                   >
-                    {dates.slice(0, i + 1).length && protocols.filter((p) => checks.has(`${p.id}|${d}`)).length}
+                    {protocols.filter((p) => checks.has(`${p.id}|${d}`)).length}
                   </div>
                 ))}
               </div>
