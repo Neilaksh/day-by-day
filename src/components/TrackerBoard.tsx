@@ -232,15 +232,24 @@ export function TrackerBoard({ userId }: { userId: string }) {
 
       let protoList = (protoRes.data ?? []) as Protocol[];
 
-      // First visit: lay out 12 numbered protocol rows, like the paper sheet
-      if (!protoRes.error && protoList.length === 0) {
+      // Seed 12 blank protocols only on the very first visit for this user.
+      // We track this with localStorage so deleting all protocols never re-seeds.
+      const seededKey = `day-by-day:seeded:${userId}`;
+      const alreadySeeded = localStorage.getItem(seededKey) === "1";
+      if (!protoRes.error && protoList.length === 0 && !alreadySeeded) {
         const seed = Array.from({ length: SEED_COUNT }, (_, i) => ({
           user_id: userId,
           label: `Protocol ${i + 1}`,
           position: i,
         }));
         const ins = await supabase.from("protocols").insert(seed).select("id,label,position");
-        if (!ins.error && ins.data) protoList = ins.data as Protocol[];
+        if (!ins.error && ins.data) {
+          protoList = ins.data as Protocol[];
+          localStorage.setItem(seededKey, "1");
+        }
+      } else if (protoList.length > 0 && !alreadySeeded) {
+        // Mark as seeded if protocols already exist (e.g. existing users)
+        localStorage.setItem(seededKey, "1");
       }
 
       if (cancelled) return;
@@ -353,10 +362,20 @@ export function TrackerBoard({ userId }: { userId: string }) {
     [userId],
   );
 
-  const renameProtocol = useCallback((id: string, label: string) => {
-    setProtocols((prev) => prev.map((p) => (p.id === id ? { ...p, label } : p)));
-    supabase.from("protocols").update({ label }).eq("id", id);
-  }, []);
+  const renameProtocol = useCallback(
+    (id: string, label: string) => {
+      setProtocols((prev) => prev.map((p) => (p.id === id ? { ...p, label } : p)));
+      supabase
+        .from("protocols")
+        .update({ label })
+        .eq("id", id)
+        .eq("user_id", userId)
+        .then(({ error }) => {
+          if (error) console.error("renameProtocol:", error);
+        });
+    },
+    [userId],
+  );
 
   const addProtocol = useCallback(async () => {
     const nextPos = protocols.length;
