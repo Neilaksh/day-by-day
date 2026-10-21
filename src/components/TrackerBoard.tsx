@@ -279,65 +279,76 @@ export function TrackerBoard({ userId }: { userId: string }) {
 
   const toggleCheck = useCallback(
     (protocolId: string, date: string) => {
-      let isDone = false;
+      // Determine new state synchronously from current checks map
       setChecks((prev) => {
         const next = new Map(prev);
         const currentSet = next.get(protocolId) ?? new Set<string>();
         const updatedSet = new Set(currentSet);
-        if (updatedSet.has(date)) {
+        const wasDone = updatedSet.has(date);
+        if (wasDone) {
           updatedSet.delete(date);
-          isDone = false;
         } else {
           updatedSet.add(date);
-          isDone = true;
         }
         next.set(protocolId, updatedSet);
+
+        // Fire Supabase inside updater so we know the actual previous value
+        if (wasDone) {
+          supabase
+            .from("protocol_checks")
+            .delete()
+            .eq("protocol_id", protocolId)
+            .eq("entry_date", date)
+            .then(({ error }) => {
+              if (error) console.error("toggleCheck delete:", error);
+            });
+        } else {
+          supabase
+            .from("protocol_checks")
+            .upsert(
+              { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
+              { onConflict: "protocol_id,entry_date" },
+            )
+            .then(({ error }) => {
+              if (error) console.error("toggleCheck upsert:", error);
+            });
+        }
+
         return next;
       });
-
-      if (!isDone) {
-        supabase
-          .from("protocol_checks")
-          .delete()
-          .eq("protocol_id", protocolId)
-          .eq("entry_date", date);
-      } else {
-        supabase
-          .from("protocol_checks")
-          .upsert(
-            { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
-            { onConflict: "protocol_id,entry_date" },
-          );
-      }
     },
     [userId],
   );
 
   const setSleepDay = useCallback(
     (date: string, hours: number) => {
-      let isRemoved = false;
       setSleep((prev) => {
         const next = new Map(prev);
-        if (next.get(date) === hours) {
+        const wasSet = next.get(date) === hours;
+        if (wasSet) {
           next.delete(date);
-          isRemoved = true;
+          supabase
+            .from("sleep_logs")
+            .delete()
+            .eq("user_id", userId)
+            .eq("entry_date", date)
+            .then(({ error }) => {
+              if (error) console.error("setSleepDay delete:", error);
+            });
         } else {
           next.set(date, hours);
-          isRemoved = false;
+          supabase
+            .from("sleep_logs")
+            .upsert(
+              { user_id: userId, entry_date: date, hours },
+              { onConflict: "user_id,entry_date" },
+            )
+            .then(({ error }) => {
+              if (error) console.error("setSleepDay upsert:", error);
+            });
         }
         return next;
       });
-
-      if (isRemoved) {
-        supabase.from("sleep_logs").delete().eq("user_id", userId).eq("entry_date", date);
-      } else {
-        supabase
-          .from("sleep_logs")
-          .upsert(
-            { user_id: userId, entry_date: date, hours },
-            { onConflict: "user_id,entry_date" },
-          );
-      }
     },
     [userId],
   );
