@@ -96,9 +96,7 @@ const ProtocolRow = memo(function ProtocolRow({
 
   const completedDays = checkedDates.size;
 
-// Check if date d has sleep active by checking all sleep hours
-const isActive = [...sleepByHour.values()].some((activeDates) => activeDates.has(d));
-
+  // Check if date d has sleep active by checking all sleep hours
   return (
     <div
       className="group grid border-b border-border/70 last:border-b-0"
@@ -413,16 +411,16 @@ export function TrackerBoard({ userId }: { userId: string }) {
         // Fire Supabase inside updater so we know the actual previous value
         const promise = wasDone
           ? supabase
-              .from("protocol_checks")
-              .delete()
-              .eq("protocol_id", protocolId)
-              .eq("entry_date", date)
+            .from("protocol_checks")
+            .delete()
+            .eq("protocol_id", protocolId)
+            .eq("entry_date", date)
           : supabase
-              .from("protocol_checks")
-              .upsert(
-                { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
-                { onConflict: "protocol_id,entry_date" },
-              );
+            .from("protocol_checks")
+            .upsert(
+              { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
+              { onConflict: "protocol_id,entry_date" },
+            );
 
         promise.then(({ error }) => {
           if (error) console.error("toggleCheck:", error);
