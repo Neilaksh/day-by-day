@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Download, MoreVertical, X, Smartphone, Check } from "lucide-react";
+import { Download, MoreVertical, X, Smartphone } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function InstallPwaHint() {
+  const isMobile = useIsMobile();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isDismissed, setIsDismissed] = useState(true);
@@ -23,16 +25,25 @@ export function InstallPwaHint() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // 1. Check if already running as standalone PWA
+    // 1. Check if running as standalone PWA
     const checkStandalone = () => {
       const isStandaloneMode =
         window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        window.matchMedia("(display-mode: minimal-ui)").matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+        document.referrer.startsWith("android-app://");
       setIsStandalone(isStandaloneMode);
       return isStandaloneMode;
     };
 
     if (checkStandalone()) return;
+
+    const standaloneMql = window.matchMedia("(display-mode: standalone)");
+    const onStandaloneChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setIsStandalone(true);
+    };
+    standaloneMql.addEventListener("change", onStandaloneChange);
 
     // 2. Detect browser
     const ua = navigator.userAgent.toLowerCase();
@@ -63,12 +74,14 @@ export function InstallPwaHint() {
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
+      standaloneMql.removeEventListener("change", onStandaloneChange);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
 
-  if (isStandalone || isInstalled) {
+  // Only show on mobile version and hide completely on desktop or inside installed PWA
+  if (!isMobile || isStandalone || isInstalled) {
     return null;
   }
 
@@ -92,12 +105,12 @@ export function InstallPwaHint() {
 
   return (
     <>
-      {/* Header Install Button */}
+      {/* Header Install Button (Mobile only) */}
       <button
         onClick={handleInstallClick}
         title="Install as App"
         aria-label="Install as App"
-        className="inline-flex items-center gap-1.5 rounded-sm border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-mono font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+        className="inline-flex md:hidden items-center gap-1.5 rounded-sm border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-mono font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
       >
         <Download className="h-3.5 w-3.5" />
         <span className="hidden xs:inline">Install</span>
@@ -108,7 +121,7 @@ export function InstallPwaHint() {
         <aside
           role="region"
           aria-label="PWA install banner"
-          className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-border bg-card p-3 shadow-lg print:hidden sm:bottom-6"
+          className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md rounded-lg border border-border bg-card p-3 shadow-lg print:hidden md:hidden sm:bottom-6"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2.5">
