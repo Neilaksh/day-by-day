@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b301c" />
+      <stop offset="50%" stop-color="#14532d" />
+      <stop offset="100%" stop-color="#166534" />
+    </linearGradient>
+    <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#86efac" />
+      <stop offset="100%" stop-color="#22c55e" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Smooth Squircle Background with Paper Ink Edge -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bg)" />
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+
+  <!-- Circular Growth Progress Ring -->
+  <circle cx="32" cy="32" r="23.5" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5" />
+  <path d="M 32 8.5 A 23.5 23.5 0 1 1 12 44.5" fill="none" stroke="url(#arcGrad)" stroke-width="3" stroke-linecap="round" />
+  <circle cx="12" cy="44.5" r="2" fill="#facc15" />
+
+  <!-- Bold +1% Typography (centered, high contrast) -->
+  <text x="32" y="27.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif" font-size="18.5" font-weight="900" fill="#faf8f5" text-anchor="middle" dominant-baseline="central" letter-spacing="-0.5" filter="url(#shadow)">+1%</text>
+
+  <!-- Vibrant Checkmark Badge -->
+  <path d="M 23 42.5 L 29 48.5 L 41 36.5" fill="none" stroke="#4ade80" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)" />
+</svg>

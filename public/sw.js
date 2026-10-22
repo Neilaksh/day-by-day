@@ -1,12 +1,15 @@
 // Service Worker for "Getting 1% Better Each Day"
 // Provides offline capability & PWA installability (specifically for Firefox Android & Chromium)
 
-const CACHE_NAME = 'day-by-day-v1';
+const CACHE_NAME = 'day-by-day-v2';
 
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',
   '/favicon.ico',
+  '/favicon.svg',
+  '/favicon-32x32.png',
+  '/favicon-16x16.png',
   '/pwa-192x192.png',
   '/pwa-512x512.png',
   '/pwa-maskable-512x512.png',
