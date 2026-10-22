@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteAccount } from "@/server/delete-account";
 import { Download, Trash2, AlertTriangle, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -80,13 +81,9 @@ export function DataManagementDialog({
   async function handleDeleteAccount() {
     setDeleting(true);
     try {
-      // 1. Delete user rows from all client-managed tracker tables
-      await Promise.all([
-        supabase.from("protocol_checks").delete().eq("user_id", userId),
-        supabase.from("protocols").delete().eq("user_id", userId),
-        supabase.from("sleep_logs").delete().eq("user_id", userId),
-        supabase.from("month_notes").delete().eq("user_id", userId),
-      ]);
+      // 1. Call server function to delete all data + auth user
+      //    (uses service-role key; deletes from auth.users so login is impossible)
+      await deleteAccount();
 
       // 2. Clear application preferences from local storage
       try {
@@ -98,15 +95,15 @@ export function DataManagementDialog({
         // Ignore local storage errors
       }
 
-      // 3. Sign out of authentication session
+      // 3. Sign out of any remaining client session
       await supabase.auth.signOut();
 
-      toast.success("All your tracker data has been completely erased.");
+      toast.success("Your account and all data have been permanently deleted.");
       onOpenChange(false);
       window.location.reload();
     } catch (err) {
       console.error("Account erasure error:", err);
-      toast.error("Failed to delete account data. Please contact support.");
+      toast.error("Failed to delete account. Please try again or contact support.");
     } finally {
       setDeleting(false);
     }
@@ -151,7 +148,7 @@ export function DataManagementDialog({
               <span>Erase Account & Data</span>
             </h3>
             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Permanently delete all your habit protocols, checks, sleep records, and notes. This action is irreversible.
+              Permanently delete your account and all associated data (protocols, checks, sleep records, notes). You will not be able to log back in. This action is irreversible.
             </p>
 
             {!confirmDelete ? (
@@ -166,7 +163,7 @@ export function DataManagementDialog({
               <div className="mt-3 space-y-3 rounded border border-destructive/50 bg-destructive/10 p-3">
                 <div className="flex items-start gap-2 text-xs text-destructive font-medium">
                   <AlertTriangle className="size-4 shrink-0 mt-0.5" aria-hidden="true" />
-                  <span>Are you absolutely sure? All tracker history will be immediately and permanently destroyed.</span>
+                  <span>Are you absolutely sure? Your account and all tracker history will be immediately and permanently destroyed. You will not be able to log back in.</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
