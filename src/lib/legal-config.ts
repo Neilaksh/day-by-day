@@ -19,7 +19,7 @@ export const LEGAL_CONFIG = {
 
   // Website details
   APP_NAME: "Getting 1% Better Each Day",
-  APP_URL: "https://day-by-day.app",
+  APP_URL: "https://days-by-day.lovable.app",
 
   // Infrastructure & Data Processor Details
   // TODO: Specify your Supabase project region (e.g., 'eu-central-1 Frankfurt', 'us-east-1 Virginia')
