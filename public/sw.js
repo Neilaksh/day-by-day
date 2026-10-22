@@ -1,7 +1,7 @@
 // Service Worker for "Getting 1% Better Each Day"
 // Provides offline capability & PWA installability (specifically for Firefox Android & Chromium)
 
-const CACHE_NAME = 'day-by-day-v2';
+const CACHE_NAME = 'day-by-day-v3';
 
 const PRECACHE_ASSETS = [
   '/',

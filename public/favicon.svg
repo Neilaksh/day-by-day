@@ -1,31 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0b301c" />
-      <stop offset="50%" stop-color="#14532d" />
-      <stop offset="100%" stop-color="#166534" />
-    </linearGradient>
-    <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#86efac" />
-      <stop offset="100%" stop-color="#22c55e" />
-    </linearGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="1" flood-opacity="0.3" />
-    </filter>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Dark Green Squircle -->
+  <rect x="20" y="20" width="472" height="472" rx="110" fill="#31453a" />
 
-  <!-- Smooth Squircle Background with Paper Ink Edge -->
-  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bg)" />
-  <rect x="2" y="2" width="60" height="60" rx="15" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+  <!-- Calendar Top Binder Loops -->
+  <rect x="172" y="114" width="38" height="64" rx="19" fill="#f7f4ed" />
+  <rect x="184" y="126" width="14" height="40" rx="7" fill="#31453a" />
 
-  <!-- Circular Growth Progress Ring -->
-  <circle cx="32" cy="32" r="23.5" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5" />
-  <path d="M 32 8.5 A 23.5 23.5 0 1 1 12 44.5" fill="none" stroke="url(#arcGrad)" stroke-width="3" stroke-linecap="round" />
-  <circle cx="12" cy="44.5" r="2" fill="#facc15" />
+  <rect x="302" y="114" width="38" height="64" rx="19" fill="#f7f4ed" />
+  <rect x="314" y="126" width="14" height="40" rx="7" fill="#31453a" />
 
-  <!-- Bold +1% Typography (centered, high contrast) -->
-  <text x="32" y="27.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif" font-size="18.5" font-weight="900" fill="#faf8f5" text-anchor="middle" dominant-baseline="central" letter-spacing="-0.5" filter="url(#shadow)">+1%</text>
+  <!-- Calendar Sheet Body -->
+  <rect x="110" y="146" width="292" height="248" rx="44" fill="#f7f4ed" />
 
-  <!-- Vibrant Checkmark Badge -->
-  <path d="M 23 42.5 L 29 48.5 L 41 36.5" fill="none" stroke="#4ade80" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)" />
+  <!-- Calendar Header Line -->
+  <rect x="110" y="208" width="292" height="12" fill="#31453a" />
+
+  <!-- Checkmark -->
+  <path d="M 200 286 L 246 332 L 322 256" fill="none" stroke="#31453a" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Sprouting Leaves at Bottom-Right -->
+  <!-- Upper / Larger Leaf -->
+  <path d="M 338 376 C 352 322 414 290 442 292 C 444 320 412 382 358 396 C 342 396 336 388 338 376 Z" fill="#f7f4ed" />
+  <!-- Lower / Smaller Leaf -->
+  <path d="M 284 378 C 302 346 348 340 362 352 C 364 366 348 412 316 414 C 296 414 282 396 284 378 Z" fill="#f7f4ed" />
 </svg>
