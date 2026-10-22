@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { deleteAccount } from "@/lib/delete-account";
+import { deleteAccount } from "@/server/delete-account";
 import { Download, Trash2, AlertTriangle, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import {
