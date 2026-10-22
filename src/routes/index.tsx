@@ -1,9 +1,12 @@
-import { lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallPwaHint } from "@/components/InstallPwaHint";
+import { Footer } from "@/components/Footer";
+import { DataManagementDialog } from "@/components/DataManagementDialog";
+import { Shield } from "lucide-react";
 
 const TrackerBoard = lazy(() =>
   import("@/components/TrackerBoard").then((m) => ({ default: m.TrackerBoard })),
@@ -34,21 +37,32 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { session, loading } = useSession();
+  const [dataDialogOpen, setDataDialogOpen] = useState(false);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col justify-between">
       <header className="sticky top-0 z-20 border-b border-border bg-card/85 backdrop-blur print:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <span className="font-display text-lg font-black italic tracking-tight">
             Getting 1% Better Each Day
           </span>
-          <div className="flex items-center gap-3 font-mono text-xs text-muted-foreground">
+          <nav aria-label="Account navigation" className="flex items-center gap-3 font-mono text-xs text-muted-foreground">
             {session && (
               <>
                 <span className="hidden sm:inline">{session.user.email}</span>
                 <button
+                  type="button"
+                  onClick={() => setDataDialogOpen(true)}
+                  aria-label="Manage your personal data, export, or erase account"
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-foreground/15 px-2.5 py-1 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Shield className="size-3" aria-hidden="true" />
+                  <span className="hidden sm:inline">Data & Privacy</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => supabase.auth.signOut()}
-                  className="rounded-sm border border-foreground/15 px-2.5 py-1 transition-colors hover:bg-secondary hover:text-foreground"
+                  className="rounded-sm border border-foreground/15 px-2.5 py-1 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   Sign out
                 </button>
@@ -56,11 +70,11 @@ function Index() {
             )}
             <InstallPwaHint />
             <ThemeToggle />
-          </div>
+          </nav>
         </div>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         {loading ? (
           <p className="py-32 text-center font-mono text-sm text-muted-foreground">Loading…</p>
         ) : (
@@ -74,9 +88,16 @@ function Index() {
         )}
       </main>
 
-      <footer className="pb-10 pt-4 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground print:hidden">
-        Small daily wins compound
-      </footer>
+      {session && (
+        <DataManagementDialog
+          userId={session.user.id}
+          userEmail={session.user.email}
+          open={dataDialogOpen}
+          onOpenChange={setDataDialogOpen}
+        />
+      )}
+
+      <Footer />
     </div>
   );
 }

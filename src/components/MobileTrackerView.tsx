@@ -109,15 +109,16 @@ const DayCard = memo(function DayCard({
               <button
                 key={p.id}
                 onClick={() => onToggle(p.id, dateKey)}
-                aria-label={`${p.label} on ${dateKey}`}
-                aria-pressed={checked}
-                className={`min-h-[44px] rounded-md border px-3 py-2 text-left text-xs font-medium transition-colors ${
+                role="checkbox"
+                aria-checked={checked}
+                aria-label={`${p.label}: ${checked ? "completed" : "not completed"} on ${weekdayFull}, ${dayNum}`}
+                className={`min-h-[44px] rounded-md border px-3 py-2 text-left text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
                   checked
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-background text-foreground hover:bg-secondary"
                 }`}
               >
-                {checked ? "✓ " : ""}
+                <span aria-hidden="true">{checked ? "✓ " : ""}</span>
                 {p.label}
               </button>
             );
@@ -140,9 +141,10 @@ const DayCard = memo(function DayCard({
               <button
                 key={h}
                 onClick={() => handleSleepTap(h)}
-                aria-label={`${h} hours sleep on ${dateKey}`}
-                aria-pressed={active}
-                className={`min-h-[36px] min-w-[40px] rounded-md border px-2 py-1 font-mono text-xs transition-colors ${
+                role="checkbox"
+                aria-checked={active}
+                aria-label={`${h} hours sleep on ${weekdayFull}, ${dayNum}: ${active ? "logged" : "not logged"}`}
+                className={`min-h-[36px] min-w-[40px] rounded-md border px-2 py-1 font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
                   active
                     ? "border-accent bg-accent text-accent-foreground"
                     : "border-border bg-background text-muted-foreground hover:bg-secondary"
@@ -360,21 +362,22 @@ export function MobileTrackerView({
                         setEditLabel("");
                       }
                     }}
-                    className="min-h-[40px] flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-ring"
+                    className="min-h-[40px] flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 ) : (
                   <button
                     onClick={() => startEdit(p)}
-                    className="min-h-[40px] flex-1 rounded-md px-2 py-1 text-left text-sm transition-colors hover:bg-secondary"
-                    aria-label={`Rename ${p.label}`}
+                    className="min-h-[40px] flex-1 rounded-md px-2 py-1 text-left text-sm transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`Rename protocol ${p.label}`}
                   >
                     {p.label}
                   </button>
                 )}
                 <button
+                  type="button"
                   onClick={() => onDeleteProtocol(p.id)}
-                  aria-label={`Delete ${p.label}`}
-                  className="grid size-10 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  aria-label={`Delete protocol ${p.label}`}
+                  className="grid size-10 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   ×
                 </button>

@@ -28,23 +28,27 @@ const ProtocolCell = memo(function ProtocolCell({
   todayKey,
   d,
   protocolId,
+  protocolLabel,
   onToggle,
 }: {
   checked: boolean;
   todayKey: string;
   d: string;
   protocolId: string;
+  protocolLabel: string;
   onToggle: (protocolId: string, date: string) => void;
 }) {
+  const dayNum = d.slice(-2);
   return (
     <button
       key={d}
       onClick={() => onToggle(protocolId, d)}
-      aria-label={`Toggle ${d}`}
-      aria-pressed={checked}
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={`${protocolLabel}, day ${dayNum}: ${checked ? "completed" : "not completed"}`}
       className={`grid-cell ${checked ? "grid-cell-checked" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
     >
-      {checked ? "✓" : ""}
+      <span aria-hidden="true">{checked ? "✓" : ""}</span>
     </button>
   );
 });
@@ -72,6 +76,7 @@ const ProtocolRow = memo(function ProtocolRow({
   onDelete,
 }: ProtocolRowProps) {
   const [label, setLabel] = useState(protocol.label);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleBlur = useCallback(() => {
     const trimmed = label.trim();
@@ -102,22 +107,48 @@ const ProtocolRow = memo(function ProtocolRow({
           onChange={(e) => setLabel(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          aria-label="Protocol name"
-          className="w-full rounded-sm bg-transparent px-1 py-1 text-sm outline-none focus:bg-secondary/70"
+          aria-label={`Protocol name: ${protocol.label}`}
+          className="w-full rounded-sm bg-transparent px-1 py-1 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring focus:bg-secondary/70"
         />
         <span
-          className="shrink-0 font-mono text-[10px] text-muted-foreground/75 tabular-nums print:text-foreground"
+          className="shrink-0 font-mono text-[10px] text-muted-foreground font-medium tabular-nums print:text-foreground"
           title={`${completedDays} of ${dates.length} days`}
         >
           {completedDays}d
         </span>
-        <button
-          onClick={() => onDelete(protocol.id)}
-          aria-label={`Delete ${protocol.label}`}
-          className="print:hidden opacity-0 transition-opacity group-hover:opacity-100 grid size-6 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-        >
-          ×
-        </button>
+
+        {confirmDelete ? (
+          <div className="flex items-center gap-1 print:hidden shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                onDelete(protocol.id);
+                setConfirmDelete(false);
+              }}
+              aria-label={`Confirm delete ${protocol.label}`}
+              className="rounded px-1.5 py-0.5 text-[10px] font-bold bg-destructive text-destructive-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Del
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              aria-label="Cancel delete"
+              className="rounded px-1 py-0.5 text-[10px] text-muted-foreground hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            aria-label={`Delete protocol ${protocol.label}`}
+            className="print:hidden opacity-40 hover:opacity-100 focus-visible:opacity-100 transition-opacity grid size-6 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            ×
+          </button>
+        )}
       </div>
       {dates.map((d) => {
         const checked = checkedDates.has(d);
@@ -128,6 +159,7 @@ const ProtocolRow = memo(function ProtocolRow({
             todayKey={todayKey}
             d={d}
             protocolId={protocol.id}
+            protocolLabel={protocol.label}
             onToggle={onToggle}
           />
         );
@@ -150,12 +182,14 @@ const SleepCell = memo(function SleepCell({
   hours: number;
   onSetSleep: (date: string, hours: number) => void;
 }) {
+  const dayNum = d.slice(-2);
   return (
     <button
       key={d}
       onClick={() => onSetSleep(d, hours)}
-      aria-label={`${hours} hours of sleep on ${d}`}
-      aria-pressed={active}
+      role="checkbox"
+      aria-checked={active}
+      aria-label={`${hours} hours of sleep, day ${dayNum}: ${active ? "logged" : "not logged"}`}
       className={`grid-cell ${active ? "grid-cell-sleep" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
     />
   );
@@ -693,7 +727,12 @@ export function TrackerBoard({ userId }: { userId: string }) {
       ) : (
         <>
           {/* Protocols grid */}
-          <div className="overflow-x-auto rounded-lg border border-foreground/15 bg-card shadow-sm">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Monthly habit protocols grid"
+            className="overflow-x-auto rounded-lg border border-foreground/15 bg-card shadow-sm focus-visible:ring-2 focus-visible:ring-ring"
+          >
             <div className="min-w-max">
               <div
                 className="grid border-b border-foreground/15"
@@ -753,7 +792,12 @@ export function TrackerBoard({ userId }: { userId: string }) {
           </div>
 
           {/* Sleep grid */}
-          <div className="mt-8 overflow-x-auto rounded-lg border border-foreground/15 bg-card shadow-sm">
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label="Monthly sleep log grid"
+            className="mt-8 overflow-x-auto rounded-lg border border-foreground/15 bg-card shadow-sm focus-visible:ring-2 focus-visible:ring-ring"
+          >
             <div className="min-w-max">
               <div
                 className="grid border-b border-foreground/15"

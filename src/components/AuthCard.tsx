@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { LEGAL_CONFIG } from "@/lib/legal-config";
 
 type Mode = "signin" | "signup";
 
@@ -8,6 +10,7 @@ export function AuthCard() {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -16,6 +19,12 @@ export function AuthCard() {
     e.preventDefault();
     setError(null);
     setNotice(null);
+
+    if (mode === "signup" && !agreedToTerms) {
+      setError("Please review and agree to the Terms of Service to create your account.");
+      return;
+    }
+
     setBusy(true);
 
     if (mode === "signup") {
@@ -29,6 +38,15 @@ export function AuthCard() {
         setError(error.message);
         return;
       }
+
+      // Record terms acceptance timestamp and version
+      try {
+        localStorage.setItem("terms_accepted_version", LEGAL_CONFIG.TERMS_VERSION);
+        localStorage.setItem("terms_accepted_at", new Date().toISOString());
+      } catch {
+        // Ignore storage errors
+      }
+
       if (!data.session) {
         setNotice(
           "Almost there — check your inbox and click the confirmation link to activate your account.",
@@ -68,26 +86,40 @@ export function AuthCard() {
       </div>
 
       <div className="w-full max-w-sm rounded-lg border border-foreground/15 bg-card p-6 shadow-sm">
-        <div className="mb-5 flex gap-1 rounded-sm border border-border bg-muted p-1 font-mono text-xs">
+        <div
+          role="group"
+          aria-label="Authentication mode"
+          className="mb-5 flex gap-1 rounded-sm border border-border bg-muted p-1 font-mono text-xs"
+        >
           <button
             type="button"
+            aria-pressed={mode === "signin"}
             onClick={() => {
               setMode("signin");
               setError(null);
               setNotice(null);
             }}
-            className={`flex-1 rounded-sm px-3 py-1.5 transition-colors ${mode === "signin" ? "bg-card font-semibold shadow-sm" : "text-muted-foreground"}`}
+            className={`flex-1 rounded-sm px-3 py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
+              mode === "signin"
+                ? "bg-card font-semibold text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
             Sign in
           </button>
           <button
             type="button"
+            aria-pressed={mode === "signup"}
             onClick={() => {
               setMode("signup");
               setError(null);
               setNotice(null);
             }}
-            className={`flex-1 rounded-sm px-3 py-1.5 transition-colors ${mode === "signup" ? "bg-card font-semibold shadow-sm" : "text-muted-foreground"}`}
+            className={`flex-1 rounded-sm px-3 py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
+              mode === "signup"
+                ? "bg-card font-semibold text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
             Create account
           </button>
@@ -105,9 +137,12 @@ export function AuthCard() {
               id="auth-email"
               type="email"
               required
+              autoComplete="email"
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "auth-error" : undefined}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-sm border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+              className="w-full rounded-sm border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="you@example.com"
             />
           </div>
@@ -123,20 +158,66 @@ export function AuthCard() {
               type="password"
               required
               minLength={6}
+              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "auth-error" : undefined}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-sm border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+              className="w-full rounded-sm border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="••••••"
             />
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          {notice && <p className="text-sm text-primary">{notice}</p>}
+          {mode === "signup" && (
+            <div className="flex items-start gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="auth-terms-consent"
+                required
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-0.5 size-4 rounded border-border text-primary focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <label
+                htmlFor="auth-terms-consent"
+                className="text-[11px] leading-snug text-muted-foreground select-none"
+              >
+                I agree to the{" "}
+                <Link
+                  to="/terms"
+                  target="_blank"
+                  className="text-foreground underline underline-offset-2 hover:text-primary font-medium"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and acknowledge the{" "}
+                <Link
+                  to="/privacy"
+                  target="_blank"
+                  className="text-foreground underline underline-offset-2 hover:text-primary font-medium"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </label>
+            </div>
+          )}
+
+          {error && (
+            <div id="auth-error" role="alert" className="text-xs font-semibold text-destructive mt-1">
+              {error}
+            </div>
+          )}
+          {notice && (
+            <div role="status" className="text-xs font-semibold text-primary mt-1">
+              {notice}
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={busy}
-            className="w-full rounded-sm bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-85 disabled:opacity-50"
+            className="w-full rounded-sm bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-85 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-ring"
           >
             {busy ? "One moment…" : mode === "signin" ? "Sign in" : "Create account"}
           </button>
@@ -152,7 +233,7 @@ export function AuthCard() {
           <button
             type="button"
             onClick={() => social("google")}
-            className="w-full rounded-sm border border-foreground/20 bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
+            className="w-full rounded-sm border border-foreground/20 bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring"
           >
             Continue with Google
           </button>

@@ -1,3 +1,7 @@
+@import "@fontsource-variable/archivo";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -107,8 +111,8 @@
   --secondary-foreground: oklch(0.95 0.005 92);
   --muted: oklch(0.28 0.01 90);
   --muted-foreground: oklch(0.7 0.01 92);
-  --accent: oklch(0.55 0.09 88);
-  --accent-foreground: oklch(0.95 0.005 92);
+  --accent: oklch(0.48 0.09 88);
+  --accent-foreground: oklch(0.985 0.005 95);
   --destructive: oklch(0.65 0.18 27);
   --destructive-foreground: oklch(0.95 0.005 92);
   --border: oklch(1 0 0 / 12%);
@@ -135,6 +139,11 @@
     border-color: var(--color-border);
   }
 
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -153,7 +162,12 @@
 @layer components {
   /* A single tracker cell */
   .grid-cell {
-    @apply relative flex h-9 items-center justify-center border border-border/70 text-[11px] font-mono text-muted-foreground transition-colors;
+    @apply relative flex h-9 items-center justify-center border border-border/80 text-[11px] font-mono text-muted-foreground transition-colors;
+  }
+  .grid-cell:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: -1px;
+    z-index: 10;
   }
   .grid-cell:hover {
     @apply bg-secondary;
