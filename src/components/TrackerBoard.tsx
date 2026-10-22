@@ -806,17 +806,21 @@ export function TrackerBoard({ userId }: { userId: string }) {
                 <div className="border-r border-border/70 px-4 py-2 font-display text-sm font-bold">
                   Sleep
                 </div>
-                {dates.map((d, i) => (
-                  <div
-                    key={d}
-                    className={`flex flex-col items-center justify-center border-r border-border/70 py-1 font-mono text-[10px] ${d === todayKey ? "grid-cell-today" : ""}`}
-                  >
-                    <span className="font-semibold">{i + 1}</span>
-                    <span className="text-muted-foreground">
-                      {WEEKDAYS[new Date(view.y, view.m - 1, i + 1).getDay()]}
-                    </span>
-                  </div>
-                ))}
+                {dates.map((d, i) => {
+                  const isActive = sleepByHour.get(hours)?.has(d) ?? false;
+                  return (
+                    <div
+                      key={d}
+                      className={`flex flex-col items-center justify-center border-r border-border/70 py-1 font-mono text-[10px] ${d === todayKey ? "grid-cell-today" : ""} ${isActive ? "bg-yellow-500 text-black" : ""}`}
+                    >
+                      <span className="font-semibold">{i + 1}</span>
+                      <span className="text-muted-foreground">
+                        {WEEKDAYS[new Date(view.y, view.m - 1, i + 1).getDay()]}
+                      </span>
+                      {isActive && <span aria-hidden="true">✓</span>}
+                    </div>
+                  );
+                })}
               </div>
               {SLEEP_ROWS.map((hours) => (
                 <SleepRow

@@ -179,7 +179,7 @@
     @apply bg-primary/90;
   }
   .grid-cell-sleep {
-    @apply border-accent bg-accent text-accent-foreground;
+    @apply border-yellow-500 bg-yellow-500 text-black;
   }
   .grid-cell-today {
     @apply ring-1 ring-inset ring-ring/70;
@@ -230,8 +230,8 @@
     print-color-adjust: exact !important;
   }
   .grid-cell-sleep {
-    background-color: #d97706 !important;
-    color: #fff !important;
+    background-color: #f59e0b !important;
+    color: #000 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
