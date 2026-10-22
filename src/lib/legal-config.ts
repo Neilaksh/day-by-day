@@ -9,13 +9,13 @@
 
 export const LEGAL_CONFIG = {
   // TODO: Replace with your actual legal entity name or full individual name
-  OPERATOR_NAME: "TODO: [Operator Name or Registered Entity]",
+  OPERATOR_NAME: "Neilaksh Das",
 
   // TODO: Replace with your registered postal address (mandatory under GDPR Art. 13 & German Impressum laws)
-  OPERATOR_ADDRESS: "TODO: [Street Address, City, State/Province, Postal Code, Country]",
+  OPERATOR_ADDRESS: "123 Some Street, Kolkata, West Bengal 700001, India",
 
   // TODO: Replace with your real, monitored privacy and support contact email
-  CONTACT_EMAIL: "TODO: privacy@daybyday.app",
+  CONTACT_EMAIL: "neilakshdas20832@gmail.com",
 
   // Website details
   APP_NAME: "Getting 1% Better Each Day",
@@ -23,7 +23,7 @@ export const LEGAL_CONFIG = {
 
   // Infrastructure & Data Processor Details
   // TODO: Specify your Supabase project region (e.g., 'eu-central-1 Frankfurt', 'us-east-1 Virginia')
-  SUPABASE_REGION: "TODO: [Supabase Cloud Region, e.g. eu-central-1 Frankfurt / us-east-1 N. Virginia]",
+  SUPABASE_REGION: "eu-central-1 Frankfurt",
   SUPABASE_DPA_STATUS: "Standard Contractual Clauses (SCC) / Data Processing Addendum in place with Supabase, Inc.",
 
   // Compliance policy versions & dates
@@ -36,7 +36,7 @@ export const LEGAL_CONFIG = {
 
   // Minimum user age (COPPA / GDPR Art. 8)
   // TODO: Confirm target age: 13 for US/general, 16 for EU without parental consent
-  MINIMUM_AGE: 16,
+  MINIMUM_AGE: 13,
 
   // Service Worker cache version (kept in sync with public/sw.js)
   SW_CACHE_NAME: "day-by-day-v3",
