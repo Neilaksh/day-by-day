@@ -96,6 +96,9 @@ const ProtocolRow = memo(function ProtocolRow({
 
   const completedDays = checkedDates.size;
 
+// Check if date d has sleep active by checking all sleep hours
+const isActive = [...sleepByHour.values()].some((activeDates) => activeDates.has(d));
+
   return (
     <div
       className="group grid border-b border-border/70 last:border-b-0"
@@ -807,7 +810,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
                   Sleep
                 </div>
                 {dates.map((d, i) => {
-                  const isActive = sleepByHour.get(hours)?.has(d) ?? false;
+                  const isActive = [...sleepByHour.values()].some((activeDates) => activeDates.has(d));
                   return (
                     <div
                       key={d}
