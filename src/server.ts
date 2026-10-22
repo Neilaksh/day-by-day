@@ -49,7 +49,30 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      let finalResponse = await normalizeCatastrophicSsrResponse(response);
+
+      const url = new URL(request.url);
+      if (url.pathname === "/manifest.webmanifest" || url.pathname === "/manifest.json") {
+        const headers = new Headers(finalResponse.headers);
+        headers.set("content-type", "application/manifest+json; charset=utf-8");
+        finalResponse = new Response(finalResponse.body, {
+          status: finalResponse.status,
+          statusText: finalResponse.statusText,
+          headers,
+        });
+      } else if (url.pathname === "/sw.js") {
+        const headers = new Headers(finalResponse.headers);
+        headers.set("content-type", "application/javascript; charset=utf-8");
+        headers.set("service-worker-allowed", "/");
+        headers.set("cache-control", "no-cache, no-store, must-revalidate");
+        finalResponse = new Response(finalResponse.body, {
+          status: finalResponse.status,
+          statusText: finalResponse.statusText,
+          headers,
+        });
+      }
+
+      return finalResponse;
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

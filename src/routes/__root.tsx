@@ -92,8 +92,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "theme-color", content: "#166534" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "1% Better" },
     ],
     links: [
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "dns-prefetch", href: "https://fonts.googleapis.com" },
       { rel: "dns-prefetch", href: "https://fonts.gstatic.com" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -107,6 +114,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400..900;1,400..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/pwa-192x192.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/pwa-512x512.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -146,6 +155,23 @@ function RootComponent() {
     removeBadge();
     const observer = new MutationObserver(removeBadge);
     observer.observe(document.body, { childList: true, subtree: true });
+
+    // Register Service Worker for PWA (Firefox Android, Chrome, Safari)
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      const registerServiceWorker = () => {
+        navigator.serviceWorker
+          .register("/sw.js", { scope: "/" })
+          .catch((err) => {
+            console.error("Service Worker registration error:", err);
+          });
+      };
+
+      if (document.readyState === "complete") {
+        registerServiceWorker();
+      } else {
+        window.addEventListener("load", registerServiceWorker, { once: true });
+      }
+    }
 
     return () => observer.disconnect();
   }, []);

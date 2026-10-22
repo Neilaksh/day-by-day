@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { InstallPwaHint } from "@/components/InstallPwaHint";
 
 const TrackerBoard = lazy(() =>
   import("@/components/TrackerBoard").then((m) => ({ default: m.TrackerBoard })),
@@ -53,6 +54,7 @@ function Index() {
                 </button>
               </>
             )}
+            <InstallPwaHint />
             <ThemeToggle />
           </div>
         </div>
