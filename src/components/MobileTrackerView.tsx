@@ -48,11 +48,13 @@ interface MobileTrackerViewProps {
   onRenameProtocol: (id: string, label: string) => void;
 }
 
+const EMPTY_CHECKED_SET = new Set<string>();
+
 const DayCard = memo(function DayCard({
   dateKey,
   isToday,
   protocols,
-  checks,
+  checkedProtocolIds,
   sleepHours,
   onToggle,
   onSetSleep,
@@ -60,7 +62,7 @@ const DayCard = memo(function DayCard({
   dateKey: string;
   isToday: boolean;
   protocols: Protocol[];
-  checks: Map<string, Set<string>>;
+  checkedProtocolIds: Set<string>;
   sleepHours: number | undefined;
   onToggle: (protocolId: string, date: string) => void;
   onSetSleep: (date: string, hours: number) => void;
@@ -69,7 +71,7 @@ const DayCard = memo(function DayCard({
   const dayNum = d.getDate();
   const weekdayShort = WEEKDAY_SHORT[d.getDay()];
   const weekdayFull = WEEKDAY_FULL[d.getDay()];
-  const score = protocols.filter((p) => checks.get(p.id)?.has(dateKey)).length;
+  const score = protocols.filter((p) => checkedProtocolIds.has(p.id)).length;
 
   const handleSleepTap = useCallback(
     (h: number) => onSetSleep(dateKey, h),
@@ -102,7 +104,7 @@ const DayCard = memo(function DayCard({
       {protocols.length > 0 ? (
         <div className="flex flex-wrap gap-2 px-4 py-3">
           {protocols.map((p) => {
-            const checked = checks.get(p.id)?.has(dateKey) ?? false;
+            const checked = checkedProtocolIds.has(p.id);
             return (
               <button
                 key={p.id}
@@ -188,6 +190,22 @@ export function MobileTrackerView({
     () => weekDates.filter((d) => dates.includes(d)),
     [weekDates, dates],
   );
+
+  // Map of dateKey -> Set of checked protocolIds for memoized DayCard consumption
+  const checksByDate = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const [protocolId, dateSet] of checks) {
+      for (const d of dateSet) {
+        let set = map.get(d);
+        if (!set) {
+          set = new Set();
+          map.set(d, set);
+        }
+        set.add(protocolId);
+      }
+    }
+    return map;
+  }, [checks]);
 
   const shiftWeek = useCallback((delta: number) => {
     setWeekStart((prev) => addDays(prev, delta * 7));
@@ -301,7 +319,7 @@ export function MobileTrackerView({
               dateKey={d}
               isToday={d === todayKey}
               protocols={protocols}
-              checks={checks}
+              checkedProtocolIds={checksByDate.get(d) ?? EMPTY_CHECKED_SET}
               sleepHours={sleep.get(d)}
               onToggle={onToggle}
               onSetSleep={onSetSleep}

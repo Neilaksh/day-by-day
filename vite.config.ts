@@ -20,6 +20,7 @@ export default defineConfig({
             if (id.includes("node_modules/@supabase")) {
               return "supabase";
             }
+            return undefined;
           },
         },
       },
