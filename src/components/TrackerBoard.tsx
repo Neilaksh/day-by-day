@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Printer } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +13,42 @@ const dateKey = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`;
 const WEEKDAYS = ["Su", "M", "T", "W", "Th", "F", "Sa"];
 const SLEEP_ROWS = [9, 8, 7, 6, 5];
 
-const EMPTY_SET = new Set<string>();
+// Query keys for TanStack Query caching
+const qk = {
+  protocols: (userId: string) => ["protocols", userId] as const,
+  checks: (userId: string, monthKey: string) => ["checks", userId, monthKey] as const,
+  sleep: (userId: string, monthKey: string) => ["sleep", userId, monthKey] as const,
+  note: (userId: string, monthKey: string) => ["note", userId, monthKey] as const,
+};
+
+// ================= Memoized leaf cells =================
+
+const ProtocolCell = memo(function ProtocolCell({
+  checked,
+  todayKey,
+  d,
+  protocolId,
+  onToggle,
+}: {
+  checked: boolean;
+  todayKey: string;
+  d: string;
+  protocolId: string;
+  onToggle: (protocolId: string, date: string) => void;
+}) {
+  return (
+    <button
+      key={d}
+      onClick={() => onToggle(protocolId, d)}
+      aria-label={`Toggle ${d}`}
+      aria-pressed={checked}
+      className={`grid-cell ${checked ? "grid-cell-checked" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
+    >
+      {checked ? "✓" : ""}
+    </button>
+  );
+});
+ProtocolCell.displayName = "ProtocolCell";
 
 interface ProtocolRowProps {
   protocol: Protocol;
@@ -37,26 +73,23 @@ const ProtocolRow = memo(function ProtocolRow({
 }: ProtocolRowProps) {
   const [label, setLabel] = useState(protocol.label);
 
-  useEffect(() => {
-    setLabel(protocol.label);
-  }, [protocol.label]);
-
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     const trimmed = label.trim();
     if (trimmed && trimmed !== protocol.label) {
       onRename(protocol.id, trimmed);
-    } else if (!trimmed) {
+    } else {
       setLabel(protocol.label);
     }
-  };
+  }, [label, protocol.label, protocol.id, onRename]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.currentTarget.blur();
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") e.currentTarget.blur();
+    },
+    [],
+  );
 
-  const completedDays = checkedDates?.size ?? 0;
+  const completedDays = checkedDates.size;
 
   return (
     <div
@@ -65,7 +98,7 @@ const ProtocolRow = memo(function ProtocolRow({
     >
       <div className="flex items-center gap-1 border-r border-border/70 px-2 pl-4">
         <input
-          value={label}
+          defaultValue={label}
           onChange={(e) => setLabel(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
@@ -87,22 +120,47 @@ const ProtocolRow = memo(function ProtocolRow({
         </button>
       </div>
       {dates.map((d) => {
-        const checked = checkedDates?.has(d) ?? false;
+        const checked = checkedDates.has(d);
         return (
-          <button
+          <ProtocolCell
             key={d}
-            onClick={() => onToggle(protocol.id, d)}
-            aria-label={`${protocol.label} on ${d}`}
-            aria-pressed={checked}
-            className={`grid-cell ${checked ? "grid-cell-checked" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
-          >
-            {checked ? "✓" : ""}
-          </button>
+            checked={checked}
+            todayKey={todayKey}
+            d={d}
+            protocolId={protocol.id}
+            onToggle={onToggle}
+          />
         );
       })}
     </div>
   );
 });
+ProtocolRow.displayName = "ProtocolRow";
+
+const SleepCell = memo(function SleepCell({
+  active,
+  todayKey,
+  d,
+  hours,
+  onSetSleep,
+}: {
+  active: boolean;
+  todayKey: string;
+  d: string;
+  hours: number;
+  onSetSleep: (date: string, hours: number) => void;
+}) {
+  return (
+    <button
+      key={d}
+      onClick={() => onSetSleep(d, hours)}
+      aria-label={`${hours} hours of sleep on ${d}`}
+      aria-pressed={active}
+      className={`grid-cell ${active ? "grid-cell-sleep" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
+    />
+  );
+});
+SleepCell.displayName = "SleepCell";
 
 interface SleepRowProps {
   hours: number;
@@ -132,29 +190,31 @@ const SleepRow = memo(function SleepRow({
       {dates.map((d) => {
         const active = activeDates.has(d);
         return (
-          <button
+          <SleepCell
             key={d}
-            onClick={() => onSetSleep(d, hours)}
-            aria-label={`${hours} hours of sleep on ${d}`}
-            aria-pressed={active}
-            className={`grid-cell ${active ? "grid-cell-sleep" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
+            active={active}
+            todayKey={todayKey}
+            d={d}
+            hours={hours}
+            onSetSleep={onSetSleep}
           />
         );
       })}
     </div>
   );
 });
+SleepRow.displayName = "SleepRow";
 
 export function TrackerBoard({ userId }: { userId: string }) {
   const now = new Date();
   const [view, setView] = useState({ y: now.getFullYear(), m: now.getMonth() + 1 });
-  const [protocols, setProtocols] = useState<Protocol[]>([]);
-  const [checks, setChecks] = useState<Map<string, Set<string>>>(new Map());
-  const [sleep, setSleep] = useState<Map<string, number>>(new Map());
   const [note, setNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [checks, setChecks] = useState<Map<string, Set<string>>>(new Map());
+  const [sleep, setSleep] = useState<Map<string, number>>(new Map());
+  const [protocols, setProtocols] = useState<Protocol[]>([]);
   const noteTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const queryClient = useQueryClient();
 
   const monthKey = `${view.y}-${pad(view.m)}`;
   const daysInMonth = useMemo(() => new Date(view.y, view.m, 0).getDate(), [view]);
@@ -195,78 +255,108 @@ export function TrackerBoard({ userId }: { userId: string }) {
     };
   }, [monthKey]);
 
-  // Load (or seed) all data for the visible month
+  // ================= TanStack Query data fetching =================
+  const start = dateKey(view.y, view.m, 1);
+  const end = dateKey(view.y, view.m, daysInMonth);
+
+  const protocolsQuery = useQuery({
+    queryKey: qk.protocols(userId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("protocols")
+        .select("id,label,position")
+        .eq("user_id", userId)
+        .order("position");
+      if (error) throw error;
+      return (data ?? []) as Protocol[];
+    },
+    enabled: !!userId,
+  });
+
+  const checksQuery = useQuery({
+    queryKey: qk.checks(userId, monthKey),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("protocol_checks")
+        .select("protocol_id,entry_date")
+        .eq("user_id", userId)
+        .eq("done", true)
+        .gte("entry_date", start)
+        .lte("entry_date", end);
+      if (error) throw error;
+      return (data ?? []) as { protocol_id: string; entry_date: string }[];
+    },
+    enabled: !!userId,
+  });
+
+  const sleepQuery = useQuery({
+    queryKey: qk.sleep(userId, monthKey),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sleep_logs")
+        .select("entry_date,hours")
+        .eq("user_id", userId)
+        .gte("entry_date", start)
+        .lte("entry_date", end);
+      if (error) throw error;
+      return (data ?? []) as { entry_date: string; hours: number }[];
+    },
+    enabled: !!userId,
+  });
+
+  const noteQuery = useQuery({
+    queryKey: qk.note(userId, monthKey),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("month_notes")
+        .select("note")
+        .eq("user_id", userId)
+        .eq("month_key", monthKey)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.note ?? "";
+    },
+    enabled: !!userId,
+  });
+
+  const loading =
+    protocolsQuery.isLoading ||
+    checksQuery.isLoading ||
+    sleepQuery.isLoading ||
+    noteQuery.isLoading;
+
+  // Sync local optimistic state from query results when they change
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    (async () => {
-      const start = dateKey(view.y, view.m, 1);
-      const end = dateKey(view.y, view.m, daysInMonth);
+    if (protocolsQuery.data) setProtocols(protocolsQuery.data);
+  }, [protocolsQuery.data]);
 
-      const [protoRes, checkRes, sleepRes, noteRes] = await Promise.all([
-        supabase
-          .from("protocols")
-          .select("id,label,position")
-          .eq("user_id", userId)
-          .order("position"),
-        supabase
-          .from("protocol_checks")
-          .select("protocol_id,entry_date")
-          .eq("user_id", userId)
-          .eq("done", true)
-          .gte("entry_date", start)
-          .lte("entry_date", end),
-        supabase
-          .from("sleep_logs")
-          .select("entry_date,hours")
-          .eq("user_id", userId)
-          .gte("entry_date", start)
-          .lte("entry_date", end),
-        supabase
-          .from("month_notes")
-          .select("note")
-          .eq("user_id", userId)
-          .eq("month_key", monthKey)
-          .maybeSingle(),
-      ]);
-
-      if (cancelled) return;
-
-      const protoList = (protoRes.data ?? []) as Protocol[];
-
-      if (cancelled) return;
-
-      // Group checks by protocol_id -> Set<entry_date>
-      const checkMap = new Map<string, Set<string>>();
-      for (const p of protoList) {
-        checkMap.set(p.id, new Set<string>());
+  useEffect(() => {
+    if (!checksQuery.data) return;
+    const map = new Map<string, Set<string>>();
+    (protocolsQuery.data ?? []).forEach((p) => map.set(p.id, new Set<string>()));
+    for (const r of checksQuery.data) {
+      let set = map.get(r.protocol_id);
+      if (!set) {
+        set = new Set<string>();
+        map.set(r.protocol_id, set);
       }
-      for (const r of checkRes.data ?? []) {
-        let set = checkMap.get(r.protocol_id);
-        if (!set) {
-          set = new Set<string>();
-          checkMap.set(r.protocol_id, set);
-        }
-        set.add(r.entry_date);
-      }
+      set.add(r.entry_date);
+    }
+    setChecks(map);
+  }, [checksQuery.data, protocolsQuery.data]);
 
-      setProtocols(protoList);
-      setChecks(checkMap);
-      setSleep(
-        new Map(
-          (sleepRes.data ?? []).map((r: { entry_date: string; hours: number }) => [
-            r.entry_date,
-            Number(r.hours),
-          ]),
-        ),
-      );
-      setNote(noteRes.data?.note ?? "");
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, monthKey, daysInMonth, view.y, view.m]);
+  useEffect(() => {
+    if (!sleepQuery.data) return;
+    setSleep(
+      new Map(
+        (sleepQuery.data ?? []).map((r) => [r.entry_date, Number(r.hours)] as [string, number]),
+      ),
+    );
+  }, [sleepQuery.data]);
+
+  useEffect(() => {
+    if (noteQuery.data !== undefined) setNote(noteQuery.data);
+  }, [noteQuery.data]);
 
   const toggleCheck = useCallback(
     (protocolId: string, date: string) => {
@@ -284,38 +374,35 @@ export function TrackerBoard({ userId }: { userId: string }) {
         next.set(protocolId, updatedSet);
 
         // Fire Supabase inside updater so we know the actual previous value
-        if (wasDone) {
-          supabase
-            .from("protocol_checks")
-            .delete()
-            .eq("protocol_id", protocolId)
-            .eq("entry_date", date)
-            .then(({ error }) => {
-              if (error) console.error("toggleCheck delete:", error);
-            });
-        } else {
-          supabase
-            .from("protocol_checks")
-            .upsert(
-              { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
-              { onConflict: "protocol_id,entry_date" },
-            )
-            .then(({ error }) => {
-              if (error) console.error("toggleCheck upsert:", error);
-            });
-        }
+        const promise = wasDone
+          ? supabase
+              .from("protocol_checks")
+              .delete()
+              .eq("protocol_id", protocolId)
+              .eq("entry_date", date)
+          : supabase
+              .from("protocol_checks")
+              .upsert(
+                { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
+                { onConflict: "protocol_id,entry_date" },
+              );
+
+        promise.then(({ error }) => {
+          if (error) console.error("toggleCheck:", error);
+          queryClient.invalidateQueries({ queryKey: qk.checks(userId, monthKey) });
+        });
 
         return next;
       });
     },
-    [userId],
+    [userId, monthKey, queryClient],
   );
 
   const setSleepDay = useCallback(
     (date: string, hours: number) => {
       setSleep((prev) => {
         const next = new Map(prev);
-        const wasSet = next.get(date) === hours;
+        const wasSet = next.has(date);
         if (wasSet) {
           next.delete(date);
           supabase
@@ -325,6 +412,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
             .eq("entry_date", date)
             .then(({ error }) => {
               if (error) console.error("setSleepDay delete:", error);
+              queryClient.invalidateQueries({ queryKey: qk.sleep(userId, monthKey) });
             });
         } else {
           next.set(date, hours);
@@ -336,12 +424,13 @@ export function TrackerBoard({ userId }: { userId: string }) {
             )
             .then(({ error }) => {
               if (error) console.error("setSleepDay upsert:", error);
+              queryClient.invalidateQueries({ queryKey: qk.sleep(userId, monthKey) });
             });
         }
         return next;
       });
     },
-    [userId],
+    [userId, monthKey, queryClient],
   );
 
   const renameProtocol = useCallback(
@@ -354,9 +443,10 @@ export function TrackerBoard({ userId }: { userId: string }) {
         .eq("user_id", userId)
         .then(({ error }) => {
           if (error) console.error("renameProtocol:", error);
+          queryClient.invalidateQueries({ queryKey: qk.protocols(userId) });
         });
     },
-    [userId],
+    [userId, queryClient],
   );
 
   const addProtocol = useCallback(async () => {
@@ -374,9 +464,11 @@ export function TrackerBoard({ userId }: { userId: string }) {
         for (const p of added) next.set(p.id, new Set<string>());
         return next;
       });
+      queryClient.invalidateQueries({ queryKey: qk.protocols(userId) });
+      queryClient.invalidateQueries({ queryKey: qk.checks(userId, monthKey) });
       toast.success("Protocol added");
     }
-  }, [userId, protocols.length]);
+  }, [userId, protocols.length, monthKey, queryClient]);
 
   const deleteProtocol = useCallback(
     (id: string) => {
@@ -402,11 +494,13 @@ export function TrackerBoard({ userId }: { userId: string }) {
             }
             toast.error("Failed to delete protocol");
           } else {
+            queryClient.invalidateQueries({ queryKey: qk.protocols(userId) });
+            queryClient.invalidateQueries({ queryKey: qk.checks(userId, monthKey) });
             toast.info(`Deleted ${target?.label || "protocol"}`);
           }
         });
     },
-    [protocols, userId],
+    [protocols, userId, monthKey, queryClient],
   );
 
   const saveNote = useCallback(
@@ -425,9 +519,10 @@ export function TrackerBoard({ userId }: { userId: string }) {
           { onConflict: "user_id,month_key" },
         );
         setSavingNote(false);
+        queryClient.invalidateQueries({ queryKey: qk.note(userId, monthKey) });
       }, 700);
     },
-    [userId, monthKey],
+    [userId, monthKey, queryClient],
   );
 
   // Single-pass computation of all metrics and daily points
@@ -484,7 +579,10 @@ export function TrackerBoard({ userId }: { userId: string }) {
     return map;
   }, [sleep]);
 
-  const gridTemplate = `12rem repeat(${daysInMonth}, minmax(2.1rem, 1fr))`;
+  const gridTemplate = useMemo(
+    () => `12rem repeat(${daysInMonth}, minmax(2.1rem, 1fr))`,
+    [daysInMonth],
+  );
   const isMobile = useIsMobile();
 
   return (
@@ -630,7 +728,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
                   dates={dates}
                   todayKey={todayKey}
                   gridTemplate={gridTemplate}
-                  checkedDates={checks.get(p.id) ?? EMPTY_SET}
+                  checkedDates={checks.get(p.id) ?? new Set()}
                   onToggle={toggleCheck}
                   onRename={renameProtocol}
                   onDelete={deleteProtocol}
@@ -683,7 +781,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
                   dates={dates}
                   todayKey={todayKey}
                   gridTemplate={gridTemplate}
-                  activeDates={sleepByHour.get(hours) ?? EMPTY_SET}
+                  activeDates={sleepByHour.get(hours) ?? new Set()}
                   onSetSleep={setSleepDay}
                 />
               ))}

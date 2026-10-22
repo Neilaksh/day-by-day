@@ -145,6 +145,8 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
+    // Remove Lovable badge if present (CSS in styles.css also handles this;
+    // this is a one-time DOM cleanup, not continuous observation).
     const removeBadge = () => {
       const candidates = document.querySelectorAll(
         "#lovable-badge, [id*='lovable-badge'], [class*='lovable-badge'], [data-lovable-badge], a[href*='lovable.dev']",
@@ -156,8 +158,6 @@ function RootComponent() {
     };
 
     removeBadge();
-    const observer = new MutationObserver(removeBadge);
-    observer.observe(document.body, { childList: true, subtree: true });
 
     // Register Service Worker for PWA (Firefox Android, Chrome, Safari)
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -175,8 +175,6 @@ function RootComponent() {
         window.addEventListener("load", registerServiceWorker, { once: true });
       }
     }
-
-    return () => observer.disconnect();
   }, []);
 
   return (

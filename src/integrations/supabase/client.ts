@@ -23,26 +23,42 @@ function serverSupabaseUrl(publicUrl: string, supabaseKey: string): string | und
 function createSupabaseFetch(supabaseUrl: string, supabaseKey: string): typeof fetch {
   const publicUrl = supabaseUrl.replace(/\/+$/, "");
   const serverUrl = serverSupabaseUrl(publicUrl, supabaseKey);
+  const isOpaqueKey = isNewSupabaseApiKey(supabaseKey);
+  const bearerAuth = `Bearer ${supabaseKey}`;
   return (input, init) => {
-    const headers = new Headers(
-      typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined,
-    );
-
-    if (init?.headers) {
-      new Headers(init.headers).forEach((value, key) => headers.set(key, value));
-    }
-
-    // New Supabase API keys are opaque strings, not bearer JWTs.
+    // Build headers lazily only when needed
+    let headers: Headers | undefined;
     if (
-      isNewSupabaseApiKey(supabaseKey) &&
-      headers.get("Authorization") === `Bearer ${supabaseKey}`
+      typeof Request !== "undefined" &&
+      input instanceof Request &&
+      input.headers &&
+      (init?.headers || isOpaqueKey)
     ) {
-      headers.delete("Authorization");
+      headers = new Headers(input.headers);
+      if (init?.headers) {
+        new Headers(init.headers).forEach((value, key) => headers!.set(key, value));
+      }
+    } else if (init?.headers) {
+      headers = new Headers(init.headers);
     }
 
+    if (isOpaqueKey && headers?.get("Authorization") === bearerAuth) {
+      headers!.delete("Authorization");
+    }
+
+    // Ensure headers exists for apikey
+    if (!headers) {
+      headers = new Headers();
+    }
     headers.set("apikey", supabaseKey);
+
     if (serverUrl) {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
       if (url.startsWith(`${publicUrl}/`)) {
         const target = serverUrl + url.slice(publicUrl.length);
         const request =

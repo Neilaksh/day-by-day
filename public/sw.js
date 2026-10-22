@@ -2,6 +2,15 @@
 // Provides offline capability & PWA installability (specifically for Firefox Android & Chromium)
 
 const CACHE_NAME = 'day-by-day-v3';
+const MAX_CACHE_ENTRIES = 50;
+
+async function trimCache(cacheName, maxItems) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length > maxItems) {
+    await Promise.all(keys.slice(0, keys.length - maxItems).map((key) => cache.delete(key)));
+  }
+}
 
 const PRECACHE_ASSETS = [
   '/',
@@ -73,7 +82,10 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           if (response && response.status === 200) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, copy);
+              trimCache(CACHE_NAME, MAX_CACHE_ENTRIES);
+            });
           }
           return response;
         })
