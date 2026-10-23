@@ -6,7 +6,6 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallPwaHint } from "@/components/InstallPwaHint";
 import { Footer } from "@/components/Footer";
 import { DataManagementDialog } from "@/components/DataManagementDialog";
-import { NotebookPen, Shield } from "lucide-react";
 
 const TrackerBoard = lazy(() =>
   import("@/components/TrackerBoard").then((m) => ({ default: m.TrackerBoard })),
@@ -46,38 +45,32 @@ function Index() {
           <span className="font-display text-lg font-black italic tracking-tight">
             Getting 1% Better Each Day
           </span>
-          <nav aria-label="Account navigation" className="flex items-center gap-3 font-mono text-xs text-muted-foreground">
+          <nav aria-label="Account navigation" className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
             {session && (
               <>
                 <span className="hidden sm:inline">{session.user.email}</span>
-                <button
-                  type="button"
-                  onClick={() => setDataDialogOpen(true)}
-                  aria-label="Manage your personal data, export, or erase account"
-                  className="inline-flex items-center gap-1.5 rounded-sm border border-foreground/15 px-2.5 py-1 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                <Link
+                  to="/notes"
+                  className="rounded-sm border border-foreground/15 px-3 py-1.5 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <Shield className="size-3" aria-hidden="true" />
-                  <span className="hidden sm:inline">Data & Privacy</span>
-                </button>
+                  Notes
+                </Link>
+                <ThemeToggle />
                 <button
                   type="button"
                   onClick={() => supabase.auth.signOut()}
-                  className="rounded-sm border border-foreground/15 px-2.5 py-1 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-sm border border-foreground/15 px-3 py-1.5 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   Sign out
                 </button>
               </>
             )}
-            <InstallPwaHint />
-            <ThemeToggle />
-            <Link
-              to="/notes"
-              aria-label="Notes"
-              className="rounded-sm border border-foreground/15 px-2.5 py-1 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <NotebookPen className="size-3" aria-hidden="true" />
-              <span className="hidden sm:inline">Notes</span>
-            </Link>
+            {!session && (
+              <>
+                <InstallPwaHint />
+                <ThemeToggle />
+              </>
+            )}
           </nav>
         </div>
       </header>

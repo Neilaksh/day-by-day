@@ -34,10 +34,10 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-      className="grid size-8 place-items-center rounded-sm border border-foreground/15 bg-card text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+      className="inline-flex items-center justify-center gap-1.5 rounded-sm border border-foreground/15 px-3 py-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
       title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
     >
-      {theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
+      {theme === "light" ? <Moon className="size-3" /> : <Sun className="size-3" />}
     </button>
   );
 }
