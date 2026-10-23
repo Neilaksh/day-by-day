@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { MarkdownBody } from "@/components/notes/MarkdownBody";
 import type { Note } from "@/hooks/use-notes";
 
 interface NoteCardProps {
@@ -28,7 +29,7 @@ export function NoteCard({ note, onOpen, onTogglePin }: NoteCardProps) {
           <CardTitle className="line-clamp-2">{note.title}</CardTitle>
         )}
         <CardContent className="line-clamp-6 mt-2 text-sm text-muted-foreground">
-          {note.body}
+          <MarkdownBody>{note.body}</MarkdownBody>
         </CardContent>
         {note.source && (
           <div className="mt-2 text-xs text-muted-foreground">
