@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallPwaHint } from "@/components/InstallPwaHint";
 import { Footer } from "@/components/Footer";
 import { DataManagementDialog } from "@/components/DataManagementDialog";
+import { Shield } from "lucide-react";
 
 const TrackerBoard = lazy(() =>
   import("@/components/TrackerBoard").then((m) => ({ default: m.TrackerBoard })),
@@ -56,6 +57,15 @@ function Index() {
                   Notes
                 </Link>
                 <ThemeToggle />
+                <button
+                  type="button"
+                  onClick={() => setDataDialogOpen(true)}
+                  aria-label="Manage your personal data, export, or erase account"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-sm border border-foreground/15 px-3 py-1.5 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Shield className="size-3" aria-hidden="true" />
+                  <span className="hidden sm:inline">Data & Privacy</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => supabase.auth.signOut()}
