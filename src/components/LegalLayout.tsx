@@ -13,7 +13,7 @@ interface LegalLayoutProps {
 export function LegalLayout({ title, version, lastUpdated, children }: LegalLayoutProps) {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-between">
-      <header className="sticky top-0 z-20 border-b border-border bg-card/90 backdrop-blur print:hidden">
+      <header className="sticky top-0 z-20 border-b border-border bg-card/90 backdrop-blur print:hidden android-fullscreen-header">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3">
           <Link
             to="/"

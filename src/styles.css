@@ -144,6 +144,11 @@
     outline-offset: 2px;
   }
 
+  html {
+    /* Ensure HTML background extends to screen edges in Android immersive mode */
+    background-color: var(--color-card);
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -160,6 +165,14 @@
 }
 
 @layer components {
+  /* Android TWA fullscreen: extend header background to absolute top edge */
+  .android-fullscreen-header {
+    /* Add padding-top for safe area (notches, camera cutouts) on supported devices */
+    padding-top: env(safe-area-inset-top, 0);
+    /* Extend background to cover the top edge in immersive mode */
+    margin-top: calc(-1 * env(safe-area-inset-top, 0));
+  }
+
   /* A single tracker cell */
   .grid-cell {
     @apply relative flex h-9 items-center justify-center border border-border/80 text-[11px] font-mono text-muted-foreground transition-colors;

@@ -41,7 +41,7 @@ function Index() {
 
   return (
     <div className="min-h-screen flex flex-col justify-between">
-      <header className="sticky top-0 z-20 border-b border-border bg-card/85 backdrop-blur print:hidden">
+      <header className="sticky top-0 z-20 border-b border-border bg-card/85 backdrop-blur print:hidden android-fullscreen-header">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <span className="font-display text-lg font-black italic tracking-tight">
             Getting 1% Better Each Day
