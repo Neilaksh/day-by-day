@@ -192,7 +192,9 @@ const SleepCell = memo(function SleepCell({
       aria-checked={active}
       aria-label={`${hours} hours of sleep, day ${dayNum}: ${active ? "logged" : "not logged"}`}
       className={`grid-cell ${active ? "grid-cell-sleep" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
-    />
+    >
+      <span aria-hidden="true">{active ? "✓" : ""}</span>
+    </button>
   );
 });
 SleepCell.displayName = "SleepCell";
