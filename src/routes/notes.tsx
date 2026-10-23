@@ -1,6 +1,6 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, Shuffle } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
 import {
   useNotes,
@@ -41,6 +41,9 @@ function Notes() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorNoteId, setEditorNoteId] = useState<string | null>(null);
 
+  // Remembers the last random pick so Random doesn't repeat the same note
+  const lastRandomNoteId = useRef<string | null>(null);
+
   const selectedNote = notes?.find((n) => n.id === selectedNoteId) ?? null;
   const editorNote = notes?.find((n) => n.id === editorNoteId) ?? null;
 
@@ -56,6 +59,27 @@ function Notes() {
   const onNewNote = () => {
     setEditorNoteId(null);
     setEditorOpen(true);
+  };
+
+  const onRandomNote = () => {
+    const all = notes ?? [];
+    if (all.length === 0) return;
+
+    // Prefer a note that is neither the open one nor the last one picked.
+    // Relax the rules step by step if the list is too short.
+    let pool = all.filter(
+      (n) => n.id !== selectedNoteId && n.id !== lastRandomNoteId.current,
+    );
+    if (pool.length === 0) {
+      pool = all.filter((n) => n.id !== lastRandomNoteId.current);
+    }
+    if (pool.length === 0) pool = all;
+
+    const randomNote = pool[Math.floor(Math.random() * pool.length)];
+    if (!randomNote) return;
+
+    lastRandomNoteId.current = randomNote.id;
+    setSelectedNoteId(randomNote.id);
   };
 
   const onEdit = () => {
@@ -138,14 +162,25 @@ function Notes() {
 
   return (
     <div className="min-h-screen flex flex-col px-4 py-8">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-display text-2xl font-black italic tracking-tight">
           Notes & Quotes
         </h1>
-        <Button size="sm" onClick={onNewNote}>
-          <Plus className="mr-1 h-4 w-4" />
-          New note
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onRandomNote}
+            disabled={(notes ?? []).length === 0}
+          >
+            <Shuffle className="mr-1 h-4 w-4" />
+            Random
+          </Button>
+          <Button size="sm" onClick={onNewNote}>
+            <Plus className="mr-1 h-4 w-4" />
+            New note
+          </Button>
+        </div>
       </div>
 
       <NotesList

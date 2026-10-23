@@ -49,6 +49,7 @@ export const deleteAccount = createServerFn({ method: "POST" }).handler(
         .eq("user_id", userId),
       supabaseAdmin.from("sleep_logs").delete().eq("user_id", userId),
       supabaseAdmin.from("month_notes").delete().eq("user_id", userId),
+      supabaseAdmin.from("notes").delete().eq("user_id", userId),
     ]);
 
     // Check for data deletion errors

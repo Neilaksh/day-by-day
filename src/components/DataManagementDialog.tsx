@@ -32,12 +32,17 @@ export function DataManagementDialog({
   async function handleExport() {
     setExporting(true);
     try {
-      const [protocolsRes, checksRes, sleepRes, notesRes] = await Promise.all([
-        supabase.from("protocols").select("*").eq("user_id", userId),
-        supabase.from("protocol_checks").select("*").eq("user_id", userId),
-        supabase.from("sleep_logs").select("*").eq("user_id", userId),
-        supabase.from("month_notes").select("*").eq("user_id", userId),
-      ]);
+      const [protocolsRes, checksRes, sleepRes, monthNotesRes, notesRes] =
+        await Promise.all([
+          supabase.from("protocols").select("*").eq("user_id", userId),
+          supabase.from("protocol_checks").select("*").eq("user_id", userId),
+          supabase.from("sleep_logs").select("*").eq("user_id", userId),
+          supabase.from("month_notes").select("*").eq("user_id", userId),
+          supabase.from("notes").select("*").eq("user_id", userId),
+        ]);
+
+      // Don't silently export an empty list if the notes query failed
+      if (notesRes.error) throw notesRes.error;
 
       const exportPayload = {
         app: "Getting 1% Better Each Day",
@@ -51,7 +56,8 @@ export function DataManagementDialog({
           protocols: protocolsRes.data ?? [],
           protocol_checks: checksRes.data ?? [],
           sleep_logs: sleepRes.data ?? [],
-          month_notes: notesRes.data ?? [],
+          month_notes: monthNotesRes.data ?? [],
+          notes: notesRes.data ?? [],
         },
       };
 
@@ -129,7 +135,7 @@ export function DataManagementDialog({
               <span>Export Personal Data</span>
             </h3>
             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Download a complete JSON export of all your protocols, daily checks, sleep logs, and monthly notes.
+              Download a complete JSON export of all your protocols, daily checks, sleep logs, monthly notes, and notes &amp; quotes.
             </p>
             <button
               type="button"
@@ -148,7 +154,7 @@ export function DataManagementDialog({
               <span>Erase Account & Data</span>
             </h3>
             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Permanently delete your account and all associated data (protocols, checks, sleep records, notes). You will not be able to log back in. This action is irreversible.
+              Permanently delete your account and all associated data (protocols, checks, sleep records, monthly notes, notes &amp; quotes). You will not be able to log back in. This action is irreversible.
             </p>
 
             {!confirmDelete ? (
