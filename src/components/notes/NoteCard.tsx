@@ -28,9 +28,9 @@ export function NoteCard({ note, onOpen, onTogglePin }: NoteCardProps) {
         {note.title && (
           <CardTitle className="line-clamp-2">{note.title}</CardTitle>
         )}
-        <CardContent className="line-clamp-6 mt-2 text-sm text-muted-foreground">
+        <div className="mt-2 text-sm text-muted-foreground overflow-hidden" style={{ maxHeight: '10rem' }}>
           <MarkdownBody>{note.body}</MarkdownBody>
-        </CardContent>
+        </div>
         {note.source && (
           <div className="mt-2 text-xs text-muted-foreground">
             {note.source}
