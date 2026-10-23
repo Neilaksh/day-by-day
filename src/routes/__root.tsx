@@ -143,6 +143,18 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  // Apply saved theme preference on mount so it persists across all routes and page refreshes
+  useEffect(() => {
+    const isDark =
+      localStorage.getItem("theme") === "dark" ||
+      (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
   useEffect(() => {
     // Remove Lovable badge if present (CSS in styles.css also handles this;
     // this is a one-time DOM cleanup, not continuous observation).
