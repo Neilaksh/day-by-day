@@ -1,12 +1,12 @@
 import { useState, lazy, Suspense } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { InstallPwaHint } from "@/components/InstallPwaHint";
 import { Footer } from "@/components/Footer";
 import { DataManagementDialog } from "@/components/DataManagementDialog";
-import { Shield } from "lucide-react";
+import { NotebookPen, Shield } from "lucide-react";
 
 const TrackerBoard = lazy(() =>
   import("@/components/TrackerBoard").then((m) => ({ default: m.TrackerBoard })),
@@ -70,6 +70,14 @@ function Index() {
             )}
             <InstallPwaHint />
             <ThemeToggle />
+            <Link
+              to="/notes"
+              aria-label="Notes"
+              className="rounded-sm border border-foreground/15 px-2.5 py-1 transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <NotebookPen className="size-3" aria-hidden="true" />
+              <span className="hidden sm:inline">Notes</span>
+            </Link>
           </nav>
         </div>
       </header>

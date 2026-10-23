@@ -87,7 +87,7 @@ function createSupabaseClient() {
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.\n\n`;
     console.error(`[Supabase] ${message}`);
-    console.error(`Current import.meta.env.VITE_SUPABASE_URL:`, import.meta.env.VITE_SUPABASE_URL);
+    console.error(`Current import.meta.env.VITE_SUPABASE_URL:`, import.meta.env["VITE_SUPABASE_URL"]);
     console.error(`Current process.env.SUPABASE_URL:`, process.env["SUPABASE_URL"]);
     throw new Error(message);
   }
