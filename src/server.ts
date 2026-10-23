@@ -60,6 +60,14 @@ export default {
           statusText: finalResponse.statusText,
           headers,
         });
+      } else if (url.pathname === "/.well-known/assetlinks.json") {
+        const headers = new Headers(finalResponse.headers);
+        headers.set("content-type", "application/json; charset=utf-8");
+        finalResponse = new Response(finalResponse.body, {
+          status: finalResponse.status,
+          statusText: finalResponse.statusText,
+          headers,
+        });
       } else if (url.pathname === "/sw.js") {
         const headers = new Headers(finalResponse.headers);
         headers.set("content-type", "application/javascript; charset=utf-8");
