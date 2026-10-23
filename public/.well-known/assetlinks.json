@@ -1,8 +1,14 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.lovable.days_by_day.twa",
-        "sha256_cert_fingerprints": ["76:44:FF:56:31:B4:94:74:B7:0F:E6:F7:55:36:57:88:42:84:B4:6C:39:B6:CC:FB:99:1A:B6:BC:79:6C:41:B8"]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.lovable.days_by_day.twa",
+      "sha256_cert_fingerprints": [
+        "68:B5:AD:35:0C:09:17:B5:0A:A7:B6:02:05:C7:EF:A2:C0:C0:C1:AC:E3:55:17:FF:86:F2:CD:B0:0B:A2:9F:7B"
+      ]
+    }
+  }
+]
