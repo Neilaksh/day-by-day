@@ -27,10 +27,14 @@ function CookiesPage() {
           1. Our Zero-Cookie Architecture
         </h2>
         <p className="mt-2">
-          {LEGAL_CONFIG.APP_NAME} does <strong>not</strong> set or read any advertising, tracking, or marketing cookies. We do not track you across other websites, and we do not use third-party behavioral profiling tools.
+          {LEGAL_CONFIG.APP_NAME} does <strong>not</strong> set or read any advertising, tracking,
+          or marketing cookies. We do not track you across other websites, and we do not use
+          third-party behavioral profiling tools.
         </p>
         <p className="mt-2">
-          Instead, we use modern client-side storage technologies (<code>localStorage</code> and the browser <code>Cache API</code>) strictly to provide core features you request, such as keeping you logged in and remembering your visual paper theme.
+          Instead, we use modern client-side storage technologies (<code>localStorage</code> and the
+          browser <code>Cache API</code>) strictly to provide core features you request, such as
+          keeping you logged in and remembering your visual paper theme.
         </p>
       </section>
 
@@ -45,11 +49,21 @@ function CookiesPage() {
           <table className="w-full text-left font-mono text-xs">
             <thead className="border-b border-border bg-muted/60 text-foreground font-semibold">
               <tr>
-                <th scope="col" className="p-3">Key / Identifier</th>
-                <th scope="col" className="p-3">Storage Type</th>
-                <th scope="col" className="p-3">Category</th>
-                <th scope="col" className="p-3">Duration</th>
-                <th scope="col" className="p-3">Purpose</th>
+                <th scope="col" className="p-3">
+                  Key / Identifier
+                </th>
+                <th scope="col" className="p-3">
+                  Storage Type
+                </th>
+                <th scope="col" className="p-3">
+                  Category
+                </th>
+                <th scope="col" className="p-3">
+                  Duration
+                </th>
+                <th scope="col" className="p-3">
+                  Purpose
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-card">
@@ -84,10 +98,15 @@ function CookiesPage() {
           3. Legal Justification under ePrivacy Directive (Art. 5(3))
         </h2>
         <p className="mt-2">
-          Under European Union ePrivacy Directive (Directive 2002/58/EC as amended) and UK PECR regulations, storage that is <em>strictly necessary</em> to deliver a service explicitly requested by the user does not require prior opt-in consent banners.
+          Under European Union ePrivacy Directive (Directive 2002/58/EC as amended) and UK PECR
+          regulations, storage that is <em>strictly necessary</em> to deliver a service explicitly
+          requested by the user does not require prior opt-in consent banners.
         </p>
         <p className="mt-2">
-          Because our storage is limited to your authenticated session token, user-chosen visual theme, and offline service worker assets, we do not present an intrusive blocking cookie barrier. We provide this disclosure page and transparency notice in the interest of complete openness.
+          Because our storage is limited to your authenticated session token, user-chosen visual
+          theme, and offline service worker assets, we do not present an intrusive blocking cookie
+          barrier. We provide this disclosure page and transparency notice in the interest of
+          complete openness.
         </p>
       </section>
 
@@ -100,17 +119,21 @@ function CookiesPage() {
         </p>
         <ul className="mt-2 list-disc pl-5 space-y-1">
           <li>
-            <strong>Chrome / Chromium:</strong> Settings → Privacy and Security → Site settings → View permissions and data stored across sites → Search for this domain → "Clear data".
+            <strong>Chrome / Chromium:</strong> Settings → Privacy and Security → Site settings →
+            View permissions and data stored across sites → Search for this domain → "Clear data".
           </li>
           <li>
-            <strong>Firefox:</strong> Settings → Privacy & Security → Cookies and Site Data → Manage Data → Remove selected.
+            <strong>Firefox:</strong> Settings → Privacy & Security → Cookies and Site Data → Manage
+            Data → Remove selected.
           </li>
           <li>
-            <strong>Safari (iOS / macOS):</strong> Settings → Safari → Advanced → Website Data → Remove all or select domain.
+            <strong>Safari (iOS / macOS):</strong> Settings → Safari → Advanced → Website Data →
+            Remove all or select domain.
           </li>
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
-          Note: Clearing local storage will sign you out of your account on this device and reset your theme to system default.
+          Note: Clearing local storage will sign you out of your account on this device and reset
+          your theme to system default.
         </p>
       </section>
     </LegalLayout>

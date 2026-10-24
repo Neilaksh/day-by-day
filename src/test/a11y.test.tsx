@@ -59,11 +59,7 @@ describe("Accessibility (axe WCAG 2.2 audit)", () => {
 
   it("LegalLayout component should have 0 axe accessibility violations", async () => {
     const { container } = renderWithRouter(() => (
-      <LegalLayout
-        title="Test Legal Policy"
-        version="1.0.0"
-        lastUpdated="October 22, 2026"
-      >
+      <LegalLayout title="Test Legal Policy" version="1.0.0" lastUpdated="October 22, 2026">
         <section>
           <h2>Test Heading</h2>
           <p>Test content paragraph for accessibility checking.</p>

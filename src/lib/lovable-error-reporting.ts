@@ -21,6 +21,7 @@ declare global {
       stack?: string;
       filename?: string;
     }) => void;
+    __sw_notified?: boolean;
   }
 }
 

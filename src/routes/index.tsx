@@ -7,6 +7,7 @@ import { InstallPwaHint } from "@/components/InstallPwaHint";
 import { Footer } from "@/components/Footer";
 import { DataManagementDialog } from "@/components/DataManagementDialog";
 import { Shield } from "lucide-react";
+import { TrackerBoardSkeleton, AuthSkeleton } from "@/components/Skeleton";
 
 const TrackerBoard = lazy(() =>
   import("@/components/TrackerBoard").then((m) => ({ default: m.TrackerBoard })),
@@ -46,7 +47,10 @@ function Index() {
           <span className="font-display text-lg font-black italic tracking-tight">
             Getting 1% Better Each Day
           </span>
-          <nav aria-label="Account navigation" className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
+          <nav
+            aria-label="Account navigation"
+            className="flex items-center gap-2 font-mono text-xs text-muted-foreground"
+          >
             {session && (
               <>
                 <span className="hidden sm:inline">{session.user.email}</span>
@@ -87,13 +91,9 @@ function Index() {
 
       <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         {loading ? (
-          <p className="py-32 text-center font-mono text-sm text-muted-foreground">Loading…</p>
+          <AuthSkeleton />
         ) : (
-          <Suspense
-            fallback={
-              <p className="py-32 text-center font-mono text-sm text-muted-foreground">Loading…</p>
-            }
-          >
+          <Suspense fallback={<TrackerBoardSkeleton />}>
             {session ? <TrackerBoard userId={session.user.id} /> : <AuthCard />}
           </Suspense>
         )}

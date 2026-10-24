@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Printer } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { MobileTrackerView } from "./MobileTrackerView";
 
 type Protocol = { id: string; label: string; position: number };
@@ -87,12 +88,9 @@ const ProtocolRow = memo(function ProtocolRow({
     }
   }, [label, protocol.label, protocol.id, onRename]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") e.currentTarget.blur();
-    },
-    [],
-  );
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") e.currentTarget.blur();
+  }, []);
 
   const completedDays = checkedDates.size;
 
@@ -244,6 +242,7 @@ SleepRow.displayName = "SleepRow";
 
 export function TrackerBoard({ userId }: { userId: string }) {
   const now = new Date();
+  const isOnline = useOnlineStatus();
   const [view, setView] = useState({ y: now.getFullYear(), m: now.getMonth() + 1 });
   const [note, setNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
@@ -413,16 +412,16 @@ export function TrackerBoard({ userId }: { userId: string }) {
         // Fire Supabase inside updater so we know the actual previous value
         const promise = wasDone
           ? supabase
-            .from("protocol_checks")
-            .delete()
-            .eq("protocol_id", protocolId)
-            .eq("entry_date", date)
+              .from("protocol_checks")
+              .delete()
+              .eq("protocol_id", protocolId)
+              .eq("entry_date", date)
           : supabase
-            .from("protocol_checks")
-            .upsert(
-              { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
-              { onConflict: "protocol_id,entry_date" },
-            );
+              .from("protocol_checks")
+              .upsert(
+                { user_id: userId, protocol_id: protocolId, entry_date: date, done: true },
+                { onConflict: "protocol_id,entry_date" },
+              );
 
         promise.then(({ error }) => {
           if (error) console.error("toggleCheck:", error);
@@ -722,6 +721,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
           onAddProtocol={addProtocol}
           onDeleteProtocol={deleteProtocol}
           onRenameProtocol={renameProtocol}
+          isOnline={isOnline}
         />
       ) : loading ? (
         <p className="py-24 text-center font-mono text-sm text-muted-foreground">
@@ -729,6 +729,32 @@ export function TrackerBoard({ userId }: { userId: string }) {
         </p>
       ) : (
         <>
+          {!isOnline && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mb-4 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 font-mono text-xs"
+            >
+              <span className="flex items-center gap-1.5">
+                <svg
+                  className="size-3.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
+                >
+                  <path d="M1 1l22 22" />
+                  <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+                  <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+                  <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+                  <path d="M1.42 1.42l4.24 4.24" />
+                  <path d="M18.7 16.3a16 16 0 0 1-4.57 3.5" />
+                </svg>
+                You're offline — changes will sync when reconnected
+              </span>
+            </div>
+          )}
           {/* Protocols grid */}
           <div
             tabIndex={0}
@@ -852,7 +878,13 @@ export function TrackerBoard({ userId }: { userId: string }) {
               rows={3}
               placeholder="What worked this month? What will you adjust?"
               className="w-full resize-y rounded-sm border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+              disabled={!isOnline}
             />
+            {!isOnline && (
+              <p className="mt-1 font-mono text-[10px] text-amber-600 dark:text-amber-400">
+                Note editing disabled while offline
+              </p>
+            )}
           </div>
         </>
       )}

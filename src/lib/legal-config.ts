@@ -1,9 +1,9 @@
 /**
  * LEGAL CONFIGURATION & DATA PRIVACY CONSTANTS
- * 
+ *
  * DISCLAIMER: The legal text in this application is provided as a template
  * and must be reviewed by a qualified attorney prior to public commercial deployment.
- * 
+ *
  * Items marked with "TODO" must be replaced with your actual business/personal details.
  */
 
@@ -24,7 +24,8 @@ export const LEGAL_CONFIG = {
   // Infrastructure & Data Processor Details
   // TODO: Specify your Supabase project region (e.g., 'eu-central-1 Frankfurt', 'us-east-1 Virginia')
   SUPABASE_REGION: "eu-central-1 Frankfurt",
-  SUPABASE_DPA_STATUS: "Standard Contractual Clauses (SCC) / Data Processing Addendum in place with Supabase, Inc.",
+  SUPABASE_DPA_STATUS:
+    "Standard Contractual Clauses (SCC) / Data Processing Addendum in place with Supabase, Inc.",
 
   // Compliance policy versions & dates
   TERMS_VERSION: "1.0.0",
@@ -60,7 +61,8 @@ export const VERIFIED_STORAGE_ITEMS: StorageItemDoc[] = [
     key: "sb-*-auth-token",
     name: "Supabase Authentication Session",
     type: "localStorage",
-    purpose: "Maintains your authenticated session securely in your browser so you do not have to log in on every page refresh.",
+    purpose:
+      "Maintains your authenticated session securely in your browser so you do not have to log in on every page refresh.",
     duration: "Persistent (removed on manual Sign Out)",
     category: "Strictly Necessary",
   },
@@ -76,7 +78,8 @@ export const VERIFIED_STORAGE_ITEMS: StorageItemDoc[] = [
     key: "pwa_install_hint_dismissed",
     name: "PWA Install Hint Dismissal",
     type: "localStorage",
-    purpose: "Remembers when you dismiss the mobile 'Install App' banner so you are not interrupted repeatedly.",
+    purpose:
+      "Remembers when you dismiss the mobile 'Install App' banner so you are not interrupted repeatedly.",
     duration: "Persistent (user-controlled)",
     category: "Functional Preference",
   },
@@ -100,7 +103,8 @@ export const VERIFIED_STORAGE_ITEMS: StorageItemDoc[] = [
     key: "day-by-day-v3",
     name: "Service Worker Asset Cache",
     type: "Cache API",
-    purpose: "Caches core application HTML, CSS, self-hosted fonts, and app icons for offline functionality and fast loading (capped at 50 entries).",
+    purpose:
+      "Caches core application HTML, CSS, self-hosted fonts, and app icons for offline functionality and fast loading (capped at 50 entries).",
     duration: "Until application update or cache clear",
     category: "Strictly Necessary",
   },

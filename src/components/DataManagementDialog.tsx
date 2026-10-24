@@ -32,14 +32,13 @@ export function DataManagementDialog({
   async function handleExport() {
     setExporting(true);
     try {
-      const [protocolsRes, checksRes, sleepRes, monthNotesRes, notesRes] =
-        await Promise.all([
-          supabase.from("protocols").select("*").eq("user_id", userId),
-          supabase.from("protocol_checks").select("*").eq("user_id", userId),
-          supabase.from("sleep_logs").select("*").eq("user_id", userId),
-          supabase.from("month_notes").select("*").eq("user_id", userId),
-          supabase.from("notes").select("*").eq("user_id", userId),
-        ]);
+      const [protocolsRes, checksRes, sleepRes, monthNotesRes, notesRes] = await Promise.all([
+        supabase.from("protocols").select("*").eq("user_id", userId),
+        supabase.from("protocol_checks").select("*").eq("user_id", userId),
+        supabase.from("sleep_logs").select("*").eq("user_id", userId),
+        supabase.from("month_notes").select("*").eq("user_id", userId),
+        supabase.from("notes").select("*").eq("user_id", userId),
+      ]);
 
       // Don't silently export an empty list if the notes query failed
       if (notesRes.error) throw notesRes.error;
@@ -135,7 +134,8 @@ export function DataManagementDialog({
               <span>Export Personal Data</span>
             </h3>
             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Download a complete JSON export of all your protocols, daily checks, sleep logs, monthly notes, and notes &amp; quotes.
+              Download a complete JSON export of all your protocols, daily checks, sleep logs,
+              monthly notes, and notes &amp; quotes.
             </p>
             <button
               type="button"
@@ -154,7 +154,9 @@ export function DataManagementDialog({
               <span>Erase Account & Data</span>
             </h3>
             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Permanently delete your account and all associated data (protocols, checks, sleep records, monthly notes, notes &amp; quotes). You will not be able to log back in. This action is irreversible.
+              Permanently delete your account and all associated data (protocols, checks, sleep
+              records, monthly notes, notes &amp; quotes). You will not be able to log back in. This
+              action is irreversible.
             </p>
 
             {!confirmDelete ? (
@@ -169,7 +171,10 @@ export function DataManagementDialog({
               <div className="mt-3 space-y-3 rounded border border-destructive/50 bg-destructive/10 p-3">
                 <div className="flex items-start gap-2 text-xs text-destructive font-medium">
                   <AlertTriangle className="size-4 shrink-0 mt-0.5" aria-hidden="true" />
-                  <span>Are you absolutely sure? Your account and all tracker history will be immediately and permanently destroyed. You will not be able to log back in.</span>
+                  <span>
+                    Are you absolutely sure? Your account and all tracker history will be
+                    immediately and permanently destroyed. You will not be able to log back in.
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button

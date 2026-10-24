@@ -82,11 +82,7 @@ export function useDeleteNote(userId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("notes")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", userId);
+      const { error } = await supabase.from("notes").delete().eq("id", id).eq("user_id", userId);
       if (error) throw error;
     },
     onSuccess: () => {

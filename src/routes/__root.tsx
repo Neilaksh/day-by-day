@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieNotice } from "@/components/CookieNotice";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 function NotFoundComponent() {
   return (
@@ -191,6 +192,21 @@ function RootComponent() {
       const registerServiceWorker = () => {
         navigator.serviceWorker
           .register("/sw.js", { scope: "/" })
+          .then((registration) => {
+            // Check for updates periodically
+            registration.addEventListener("updatefound", () => {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener("statechange", () => {
+                  if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                    // New version available
+                    console.log("New SW version available");
+                    // Could show a toast here to prompt user to refresh
+                  }
+                });
+              }
+            });
+          })
           .catch((err) => {
             console.error("Service Worker registration error:", err);
           });
@@ -201,6 +217,26 @@ function RootComponent() {
       } else {
         window.addEventListener("load", registerServiceWorker, { once: true });
       }
+
+      // Listen for SW update messages
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        // The page is now controlled by a new SW
+        if (navigator.serviceWorker.controller) {
+          // Only show if not the initial load
+          if (!window.__sw_notified) {
+            window.__sw_notified = true;
+            // Could show a toast here to prompt user to refresh
+          }
+        }
+      });
+
+      // Listen for messages from SW
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data?.type === "SW_UPDATED") {
+          // New SW is ready, prompt user to refresh
+          console.log("SW updated, refresh recommended");
+        }
+      });
     }
   }, []);
 
@@ -210,6 +246,7 @@ function RootComponent() {
       <Outlet />
       <Toaster />
       <CookieNotice />
+      <OfflineIndicator />
     </QueryClientProvider>
   );
 }

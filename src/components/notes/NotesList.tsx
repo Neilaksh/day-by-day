@@ -45,12 +45,7 @@ export function NotesList({ notes, onOpen, onTogglePin }: NotesListProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {sortedNotes.map((note) => (
-            <NoteCard
-              key={note.id}
-              note={note}
-              onOpen={onOpen}
-              onTogglePin={onTogglePin}
-            />
+            <NoteCard key={note.id} note={note} onOpen={onOpen} onTogglePin={onTogglePin} />
           ))}
         </div>
       )}

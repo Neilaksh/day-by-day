@@ -3,6 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 import { brokeredPreviewStorage } from "./previewAuthStorage";
 
+// Default timeout for Supabase requests (15 seconds)
+const SUPABASE_TIMEOUT_MS = 15_000;
+
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
 }
@@ -25,6 +28,7 @@ function createSupabaseFetch(supabaseUrl: string, supabaseKey: string): typeof f
   const serverUrl = serverSupabaseUrl(publicUrl, supabaseKey);
   const isOpaqueKey = isNewSupabaseApiKey(supabaseKey);
   const bearerAuth = `Bearer ${supabaseKey}`;
+
   return (input, init) => {
     // Build headers lazily only when needed
     let headers: Headers | undefined;
@@ -52,21 +56,40 @@ function createSupabaseFetch(supabaseUrl: string, supabaseKey: string): typeof f
     }
     headers.set("apikey", supabaseKey);
 
+    // Create abort controller for timeout, but respect existing signal if present
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), SUPABASE_TIMEOUT_MS);
+
+    // If init already has a signal, we need to handle both
+    const finalSignal = controller.signal;
+    if (init?.signal) {
+      // If the original signal is already aborted, abort our controller too
+      if (init.signal.aborted) {
+        controller.abort();
+      } else {
+        // Listen for the original signal to abort
+        init.signal.addEventListener("abort", () => controller.abort());
+      }
+    }
+
+    const fetchOptions = {
+      ...init,
+      headers,
+      signal: finalSignal,
+    };
+
+    const cleanup = () => clearTimeout(timeoutId);
+
     if (serverUrl) {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.href
-            : input.url;
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
       if (url.startsWith(`${publicUrl}/`)) {
         const target = serverUrl + url.slice(publicUrl.length);
         const request =
           typeof input === "string" || input instanceof URL ? target : new Request(target, input);
-        return fetch(request, { ...init, headers });
+        return fetch(request, fetchOptions).finally(cleanup);
       }
     }
-    return fetch(input, { ...init, headers });
+    return fetch(input, fetchOptions).finally(cleanup);
   };
 }
 
@@ -87,7 +110,10 @@ function createSupabaseClient() {
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.\n\n`;
     console.error(`[Supabase] ${message}`);
-    console.error(`Current import.meta.env.VITE_SUPABASE_URL:`, import.meta.env["VITE_SUPABASE_URL"]);
+    console.error(
+      `Current import.meta.env.VITE_SUPABASE_URL:`,
+      import.meta.env["VITE_SUPABASE_URL"],
+    );
     console.error(`Current process.env.SUPABASE_URL:`, process.env["SUPABASE_URL"]);
     throw new Error(message);
   }

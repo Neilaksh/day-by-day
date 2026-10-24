@@ -15,9 +15,7 @@ import { NotesList } from "@/components/notes/NotesList";
 import { NoteViewDialog } from "@/components/notes/NoteViewDialog";
 import { NoteEditorDialog } from "@/components/notes/NoteEditorDialog";
 
-const AuthCard = lazy(() =>
-  import("@/components/AuthCard").then((m) => ({ default: m.AuthCard })),
-);
+const AuthCard = lazy(() => import("@/components/AuthCard").then((m) => ({ default: m.AuthCard })));
 
 export const Route = createFileRoute("/notes")({
   component: Notes,
@@ -67,9 +65,7 @@ function Notes() {
 
     // Prefer a note that is neither the open one nor the last one picked.
     // Relax the rules step by step if the list is too short.
-    let pool = all.filter(
-      (n) => n.id !== selectedNoteId && n.id !== lastRandomNoteId.current,
-    );
+    let pool = all.filter((n) => n.id !== selectedNoteId && n.id !== lastRandomNoteId.current);
     if (pool.length === 0) {
       pool = all.filter((n) => n.id !== lastRandomNoteId.current);
     }
@@ -96,11 +92,7 @@ function Notes() {
     });
   };
 
-  const onSave = (values: {
-    title: string | null;
-    body: string;
-    source: string | null;
-  }) => {
+  const onSave = (values: { title: string | null; body: string; source: string | null }) => {
     if (editorNoteId === null) {
       // useCreateNote doesn't accept null, so leave empty fields out;
       // the database stores a missing title/source as null anyway.
@@ -113,29 +105,20 @@ function Notes() {
         { onSuccess: () => setEditorOpen(false) },
       );
     } else {
-      updateNote.mutate(
-        { id: editorNoteId, ...values },
-        { onSuccess: () => setEditorOpen(false) },
-      );
+      updateNote.mutate({ id: editorNoteId, ...values }, { onSuccess: () => setEditorOpen(false) });
     }
   };
 
   // ---- Early returns (after all hooks) ----
   if (loading) {
-    return (
-      <p className="py-32 text-center font-mono text-sm text-muted-foreground">
-        Loading…
-      </p>
-    );
+    return <p className="py-32 text-center font-mono text-sm text-muted-foreground">Loading…</p>;
   }
 
   if (!session) {
     return (
       <Suspense
         fallback={
-          <p className="py-32 text-center font-mono text-sm text-muted-foreground">
-            Loading…
-          </p>
+          <p className="py-32 text-center font-mono text-sm text-muted-foreground">Loading…</p>
         }
       >
         <AuthCard />
@@ -144,18 +127,13 @@ function Notes() {
   }
 
   if (isLoading) {
-    return (
-      <p className="py-32 text-center font-mono text-sm text-muted-foreground">
-        Loading…
-      </p>
-    );
+    return <p className="py-32 text-center font-mono text-sm text-muted-foreground">Loading…</p>;
   }
 
   if (isError) {
     return (
       <div className="py-32 text-center font-mono text-sm text-muted-foreground">
-        Failed to load notes:{" "}
-        {String((error as Error)?.message ?? "Unknown error")}
+        Failed to load notes: {String((error as Error)?.message ?? "Unknown error")}
       </div>
     );
   }
@@ -163,9 +141,7 @@ function Notes() {
   return (
     <div className="min-h-screen flex flex-col px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-2xl font-black italic tracking-tight">
-          Notes & Quotes
-        </h1>
+        <h1 className="font-display text-2xl font-black italic tracking-tight">Notes & Quotes</h1>
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -183,11 +159,7 @@ function Notes() {
         </div>
       </div>
 
-      <NotesList
-        notes={notes ?? []}
-        onOpen={onOpen}
-        onTogglePin={onTogglePin}
-      />
+      <NotesList notes={notes ?? []} onOpen={onOpen} onTogglePin={onTogglePin} />
 
       <p className="mt-6">
         <Link

@@ -41,13 +41,13 @@ export function LegalLayout({ title, version, lastUpdated, children }: LegalLayo
               <span>Last Updated: {lastUpdated}</span>
             </div>
             <div className="mt-4 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
-              <strong className="font-semibold">Legal Notice:</strong> This policy is provided as a compliance template and must be reviewed by a qualified legal advisor before commercial deployment.
+              <strong className="font-semibold">Legal Notice:</strong> This policy is provided as a
+              compliance template and must be reviewed by a qualified legal advisor before
+              commercial deployment.
             </div>
           </header>
 
-          <div className="space-y-6 text-sm leading-relaxed text-foreground/90">
-            {children}
-          </div>
+          <div className="space-y-6 text-sm leading-relaxed text-foreground/90">{children}</div>
         </article>
       </div>
 

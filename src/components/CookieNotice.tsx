@@ -44,7 +44,8 @@ export function CookieNotice() {
         <div className="flex-1 text-xs">
           <p className="font-semibold text-foreground">Zero Tracking Cookies</p>
           <p className="mt-1 text-muted-foreground leading-relaxed">
-            We do not use advertising or tracking cookies. We only use essential local storage for your login session and theme preference.
+            We do not use advertising or tracking cookies. We only use essential local storage for
+            your login session and theme preference.
           </p>
           <div className="mt-3 flex items-center gap-3">
             <button

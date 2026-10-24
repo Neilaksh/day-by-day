@@ -15,11 +15,7 @@ export type NoteEditorDialogProps = {
   note: Note | null; // null = creating a new note
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (values: {
-    title: string | null;
-    body: string;
-    source: string | null;
-  }) => void;
+  onSave: (values: { title: string | null; body: string; source: string | null }) => void;
   saving: boolean;
 };
 
@@ -73,9 +69,7 @@ export function NoteEditorDialog({
         <DialogHeader>
           <DialogTitle>{note ? "Edit note" : "New note"}</DialogTitle>
           <DialogDescription>
-            {note
-              ? "Update this note or quote."
-              : "Add a note or a quote. Markdown is supported."}
+            {note ? "Update this note or quote." : "Add a note or a quote. Markdown is supported."}
           </DialogDescription>
         </DialogHeader>
 

@@ -46,6 +46,7 @@ interface MobileTrackerViewProps {
   onAddProtocol: () => void;
   onDeleteProtocol: (id: string) => void;
   onRenameProtocol: (id: string, label: string) => void;
+  isOnline: boolean;
 }
 
 const EMPTY_CHECKED_SET = new Set<string>();
@@ -73,10 +74,7 @@ const DayCard = memo(function DayCard({
   const weekdayFull = WEEKDAY_FULL[d.getDay()];
   const score = protocols.filter((p) => checkedProtocolIds.has(p.id)).length;
 
-  const handleSleepTap = useCallback(
-    (h: number) => onSetSleep(dateKey, h),
-    [dateKey, onSetSleep],
-  );
+  const handleSleepTap = useCallback((h: number) => onSetSleep(dateKey, h), [dateKey, onSetSleep]);
 
   return (
     <article
@@ -180,6 +178,7 @@ export function MobileTrackerView({
   onAddProtocol,
   onDeleteProtocol,
   onRenameProtocol,
+  isOnline,
 }: MobileTrackerViewProps) {
   const [weekStart, setWeekStart] = useState<Date>(() => getWeekStart(todayKey));
 
@@ -305,6 +304,32 @@ export function MobileTrackerView({
       )}
 
       {/* Day cards */}
+      {!isOnline && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-3 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 font-mono text-xs"
+        >
+          <span className="flex items-center gap-1.5">
+            <svg
+              className="size-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path d="M1 1l22 22" />
+              <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+              <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+              <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+              <path d="M1.42 1.42l4.24 4.24" />
+              <path d="M18.7 16.3a16 16 0 0 1-4.57 3.5" />
+            </svg>
+            You're offline — changes will sync when reconnected
+          </span>
+        </div>
+      )}
       {loading ? (
         <p className="py-16 text-center font-mono text-sm text-muted-foreground">
           Loading your dashboard…
@@ -336,9 +361,10 @@ export function MobileTrackerView({
           <span className="font-display text-sm font-bold">Protocols</span>
           <button
             onClick={onAddProtocol}
-            className="rounded-md border border-foreground/15 px-3 py-1.5 font-mono text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            disabled={!isOnline}
+            className="rounded-md border border-foreground/15 px-3 py-1.5 font-mono text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            + Add
+            {!isOnline ? "Offline" : "+ Add"}
           </button>
         </div>
         {protocols.length === 0 ? (
@@ -404,7 +430,13 @@ export function MobileTrackerView({
           rows={4}
           placeholder="What worked this month? What will you adjust?"
           className="w-full resize-y rounded-sm border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+          disabled={!isOnline}
         />
+        {!isOnline && (
+          <p className="mt-1 font-mono text-[10px] text-amber-600 dark:text-amber-400">
+            Note editing disabled while offline
+          </p>
+        )}
       </div>
     </div>
   );

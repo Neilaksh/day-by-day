@@ -3,10 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { LEGAL_CONFIG } from "@/lib/legal-config";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { WifiOff, AlertCircle } from "lucide-react";
 
 type Mode = "signin" | "signup";
 
 export function AuthCard() {
+  const isOnline = useOnlineStatus();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -72,6 +75,15 @@ export function AuthCard() {
 
   return (
     <section className="mx-auto flex min-h-[70vh] max-w-6xl flex-col items-center justify-center px-4 py-16">
+      {!isOnline && (
+        <div
+          role="alert"
+          className="w-full max-w-sm mb-4 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200 flex items-center gap-2"
+        >
+          <WifiOff className="size-3.5 shrink-0" aria-hidden="true" />
+          <span>You're offline. Authentication requires an internet connection.</span>
+        </div>
+      )}
       <div className="mb-10 text-center">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">
           31 Day Dashboard
@@ -204,7 +216,11 @@ export function AuthCard() {
           )}
 
           {error && (
-            <div id="auth-error" role="alert" className="text-xs font-semibold text-destructive mt-1">
+            <div
+              id="auth-error"
+              role="alert"
+              className="text-xs font-semibold text-destructive mt-1"
+            >
               {error}
             </div>
           )}
@@ -216,7 +232,7 @@ export function AuthCard() {
 
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || !isOnline}
             className="w-full rounded-sm bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-85 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-ring"
           >
             {busy ? "One moment…" : mode === "signin" ? "Sign in" : "Create account"}
@@ -233,9 +249,17 @@ export function AuthCard() {
           <button
             type="button"
             onClick={() => social("google")}
-            className="w-full rounded-sm border border-foreground/20 bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring"
+            disabled={!isOnline}
+            className="w-full rounded-sm border border-foreground/20 bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Continue with Google
+            {!isOnline ? (
+              <>
+                <AlertCircle className="mr-1.5 size-3.5" aria-hidden="true" />
+                Continue with Google (offline)
+              </>
+            ) : (
+              "Continue with Google"
+            )}
           </button>
         </div>
       </div>

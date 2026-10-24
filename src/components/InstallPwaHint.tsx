@@ -129,9 +129,7 @@ export function InstallPwaHint() {
                 <Smartphone className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-foreground">
-                  Install "Getting 1% Better"
-                </p>
+                <p className="text-xs font-semibold text-foreground">Install "Getting 1% Better"</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {isFirefox ? (
                     <>
@@ -199,7 +197,8 @@ export function InstallPwaHint() {
                     in the address bar.
                   </li>
                   <li>
-                    Select <strong className="text-foreground">Install</strong> (or "Add to Home screen").
+                    Select <strong className="text-foreground">Install</strong> (or "Add to Home
+                    screen").
                   </li>
                   <li>Confirm by tapping Add.</li>
                 </ol>
@@ -209,10 +208,12 @@ export function InstallPwaHint() {
                 <p className="font-semibold text-foreground">Safari on iOS:</p>
                 <ol className="mt-2 list-inside list-decimal space-y-1.5 text-muted-foreground">
                   <li>
-                    Tap the <strong className="text-foreground">Share</strong> icon (square with arrow) at the bottom.
+                    Tap the <strong className="text-foreground">Share</strong> icon (square with
+                    arrow) at the bottom.
                   </li>
                   <li>
-                    Scroll down and select <strong className="text-foreground">Add to Home Screen</strong>.
+                    Scroll down and select{" "}
+                    <strong className="text-foreground">Add to Home Screen</strong>.
                   </li>
                   <li>Tap Add in the top-right corner.</li>
                 </ol>
