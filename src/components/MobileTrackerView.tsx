@@ -1,4 +1,5 @@
 import { memo, useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 type Protocol = { id: string; label: string; position: number };
 
@@ -59,6 +60,7 @@ const DayCard = memo(function DayCard({
   sleepHours,
   onToggle,
   onSetSleep,
+  isOnline,
 }: {
   dateKey: string;
   isToday: boolean;
@@ -67,6 +69,7 @@ const DayCard = memo(function DayCard({
   sleepHours: number | undefined;
   onToggle: (protocolId: string, date: string) => void;
   onSetSleep: (date: string, hours: number) => void;
+  isOnline: boolean;
 }) {
   const d = new Date(dateKey + "T00:00:00");
   const dayNum = d.getDate();
@@ -74,7 +77,27 @@ const DayCard = memo(function DayCard({
   const weekdayFull = WEEKDAY_FULL[d.getDay()];
   const score = protocols.filter((p) => checkedProtocolIds.has(p.id)).length;
 
-  const handleSleepTap = useCallback((h: number) => onSetSleep(dateKey, h), [dateKey, onSetSleep]);
+  const handleSleepTap = useCallback(
+    (h: number) => {
+      if (!isOnline) {
+        toast.error("You're offline — an internet connection is required to save changes");
+        return;
+      }
+      onSetSleep(dateKey, h);
+    },
+    [isOnline, onSetSleep, dateKey],
+  );
+
+  const handleProtocolToggle = useCallback(
+    (protocolId: string) => {
+      if (!isOnline) {
+        toast.error("You're offline — an internet connection is required to save changes");
+        return;
+      }
+      onToggle(protocolId, dateKey);
+    },
+    [isOnline, onToggle, dateKey],
+  );
 
   return (
     <article
@@ -106,15 +129,16 @@ const DayCard = memo(function DayCard({
             return (
               <button
                 key={p.id}
-                onClick={() => onToggle(p.id, dateKey)}
+                onClick={() => handleProtocolToggle(p.id)}
                 role="checkbox"
                 aria-checked={checked}
                 aria-label={`${p.label}: ${checked ? "completed" : "not completed"} on ${weekdayFull}, ${dayNum}`}
+                title={!isOnline ? "Offline - cannot save changes" : undefined}
                 className={`min-h-[44px] rounded-md border px-3 py-2 text-left text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
                   checked
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-background text-foreground hover:bg-secondary"
-                }`}
+                } ${!isOnline ? "cursor-not-allowed opacity-60" : ""}`}
               >
                 <span aria-hidden="true">{checked ? "✓ " : ""}</span>
                 {p.label}
@@ -142,11 +166,12 @@ const DayCard = memo(function DayCard({
                 role="checkbox"
                 aria-checked={active}
                 aria-label={`${h} hours sleep on ${weekdayFull}, ${dayNum}: ${active ? "logged" : "not logged"}`}
+                title={!isOnline ? "Offline - cannot save changes" : undefined}
                 className={`min-h-[36px] min-w-[40px] rounded-md border px-2 py-1 font-mono text-xs transition-colors focus-visible:ring-2 focus-visible:ring-ring ${
                   active
                     ? "border-accent bg-accent text-accent-foreground"
                     : "border-border bg-background text-muted-foreground hover:bg-secondary"
-                }`}
+                } ${!isOnline ? "cursor-not-allowed opacity-60" : ""}`}
               >
                 {h}h
               </button>
@@ -326,7 +351,7 @@ export function MobileTrackerView({
               <path d="M1.42 1.42l4.24 4.24" />
               <path d="M18.7 16.3a16 16 0 0 1-4.57 3.5" />
             </svg>
-            You're offline — changes will sync when reconnected
+            You're offline — an internet connection is required to save changes
           </span>
         </div>
       )}
@@ -350,6 +375,7 @@ export function MobileTrackerView({
               sleepHours={sleep.get(d)}
               onToggle={onToggle}
               onSetSleep={onSetSleep}
+              isOnline={isOnline}
             />
           ))}
         </div>

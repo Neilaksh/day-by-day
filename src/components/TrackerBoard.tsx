@@ -31,6 +31,7 @@ const ProtocolCell = memo(function ProtocolCell({
   protocolId,
   protocolLabel,
   onToggle,
+  isOnline,
 }: {
   checked: boolean;
   todayKey: string;
@@ -38,16 +39,27 @@ const ProtocolCell = memo(function ProtocolCell({
   protocolId: string;
   protocolLabel: string;
   onToggle: (protocolId: string, date: string) => void;
+  isOnline: boolean;
 }) {
   const dayNum = d.slice(-2);
+
+  const handleClick = () => {
+    if (!isOnline) {
+      toast.error("You're offline — an internet connection is required to save changes");
+      return;
+    }
+    onToggle(protocolId, d);
+  };
+
   return (
     <button
       key={d}
-      onClick={() => onToggle(protocolId, d)}
+      onClick={handleClick}
       role="checkbox"
       aria-checked={checked}
       aria-label={`${protocolLabel}, day ${dayNum}: ${checked ? "completed" : "not completed"}`}
-      className={`grid-cell ${checked ? "grid-cell-checked" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
+      className={`grid-cell ${checked ? "grid-cell-checked" : ""} ${d === todayKey ? "grid-cell-today" : ""} ${!isOnline ? "cursor-not-allowed opacity-60" : ""}`}
+      title={!isOnline ? "Offline - cannot save changes" : undefined}
     >
       <span aria-hidden="true">{checked ? "✓" : ""}</span>
     </button>
@@ -64,6 +76,7 @@ interface ProtocolRowProps {
   onToggle: (protocolId: string, date: string) => void;
   onRename: (protocolId: string, label: string) => void;
   onDelete: (protocolId: string) => void;
+  isOnline: boolean;
 }
 
 const ProtocolRow = memo(function ProtocolRow({
@@ -75,6 +88,7 @@ const ProtocolRow = memo(function ProtocolRow({
   onToggle,
   onRename,
   onDelete,
+  isOnline,
 }: ProtocolRowProps) {
   const [label, setLabel] = useState(protocol.label);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -160,6 +174,7 @@ const ProtocolRow = memo(function ProtocolRow({
             protocolId={protocol.id}
             protocolLabel={protocol.label}
             onToggle={onToggle}
+            isOnline={isOnline}
           />
         );
       })}
@@ -751,7 +766,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
                   <path d="M1.42 1.42l4.24 4.24" />
                   <path d="M18.7 16.3a16 16 0 0 1-4.57 3.5" />
                 </svg>
-                You're offline — changes will sync when reconnected
+                You're offline — an internet connection is required to save changes
               </span>
             </div>
           )}
@@ -771,9 +786,11 @@ export function TrackerBoard({ userId }: { userId: string }) {
                   Protocols
                   <button
                     onClick={addProtocol}
-                    className="print:hidden rounded-sm border border-foreground/15 px-2 py-0.5 font-mono text-[10px] font-normal uppercase tracking-wider text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                    disabled={!isOnline}
+                    title={!isOnline ? "Offline - cannot save changes" : undefined}
+                    className="print:hidden rounded-sm border border-foreground/15 px-2 py-0.5 font-mono text-[10px] font-normal uppercase tracking-wider text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    + Add
+                    {!isOnline ? "Offline" : "+ Add"}
                   </button>
                 </div>
                 {dates.map((d, i) => (
@@ -800,6 +817,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
                   onToggle={toggleCheck}
                   onRename={renameProtocol}
                   onDelete={deleteProtocol}
+                  isOnline={isOnline}
                 />
               ))}
 

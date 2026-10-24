@@ -2,6 +2,7 @@ import { useState, useRef, lazy, Suspense } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, Shuffle } from "lucide-react";
 import { useSession } from "@/hooks/use-session";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import {
   useNotes,
   useTogglePin,
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { NotesList } from "@/components/notes/NotesList";
 import { NoteViewDialog } from "@/components/notes/NoteViewDialog";
 import { NoteEditorDialog } from "@/components/notes/NoteEditorDialog";
+import { toast } from "sonner";
 
 const AuthCard = lazy(() => import("@/components/AuthCard").then((m) => ({ default: m.AuthCard })));
 
@@ -25,6 +27,7 @@ function Notes() {
   // ---- All hooks first, before any early return ----
   const { session, loading } = useSession();
   const userId = session?.user.id;
+  const isOnline = useOnlineStatus();
 
   const { data: notes, isLoading, isError, error } = useNotes(userId);
   const togglePin = useTogglePin(userId ?? "");
@@ -51,10 +54,18 @@ function Notes() {
   };
 
   const onTogglePin = (note: Note) => {
+    if (!isOnline) {
+      toast.error("You're offline — an internet connection is required to save changes");
+      return;
+    }
     togglePin.mutate({ id: note.id, pinned: !note.pinned });
   };
 
   const onNewNote = () => {
+    if (!isOnline) {
+      toast.error("You're offline — an internet connection is required to save changes");
+      return;
+    }
     setEditorNoteId(null);
     setEditorOpen(true);
   };
@@ -80,6 +91,10 @@ function Notes() {
 
   const onEdit = () => {
     if (selectedNoteId === null) return;
+    if (!isOnline) {
+      toast.error("You're offline — an internet connection is required to save changes");
+      return;
+    }
     setEditorNoteId(selectedNoteId);
     setSelectedNoteId(null);
     setEditorOpen(true);
@@ -87,12 +102,20 @@ function Notes() {
 
   const onDelete = () => {
     if (selectedNoteId === null) return;
+    if (!isOnline) {
+      toast.error("You're offline — an internet connection is required to save changes");
+      return;
+    }
     deleteNote.mutate(selectedNoteId, {
       onSuccess: () => setSelectedNoteId(null),
     });
   };
 
   const onSave = (values: { title: string | null; body: string; source: string | null }) => {
+    if (!isOnline) {
+      toast.error("You're offline — an internet connection is required to save changes");
+      return;
+    }
     if (editorNoteId === null) {
       // useCreateNote doesn't accept null, so leave empty fields out;
       // the database stores a missing title/source as null anyway.
