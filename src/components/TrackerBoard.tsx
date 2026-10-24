@@ -189,22 +189,34 @@ const SleepCell = memo(function SleepCell({
   d,
   hours,
   onSetSleep,
+  isOnline,
 }: {
   active: boolean;
   todayKey: string;
   d: string;
   hours: number;
   onSetSleep: (date: string, hours: number) => void;
+  isOnline: boolean;
 }) {
   const dayNum = d.slice(-2);
+
+  const handleClick = () => {
+    if (!isOnline) {
+      toast.error("You're offline — an internet connection is required to save changes");
+      return;
+    }
+    onSetSleep(d, hours);
+  };
+
   return (
     <button
       key={d}
-      onClick={() => onSetSleep(d, hours)}
+      onClick={handleClick}
       role="checkbox"
       aria-checked={active}
       aria-label={`${hours} hours of sleep, day ${dayNum}: ${active ? "logged" : "not logged"}`}
-      className={`grid-cell ${active ? "grid-cell-sleep" : ""} ${d === todayKey ? "grid-cell-today" : ""}`}
+      className={`grid-cell ${active ? "grid-cell-sleep" : ""} ${d === todayKey ? "grid-cell-today" : ""} ${!isOnline ? "cursor-not-allowed opacity-60" : ""}`}
+      title={!isOnline ? "Offline - cannot save changes" : undefined}
     >
       <span aria-hidden="true">{active ? "✓" : ""}</span>
     </button>
@@ -219,6 +231,7 @@ interface SleepRowProps {
   gridTemplate: string;
   activeDates: Set<string>;
   onSetSleep: (date: string, hours: number) => void;
+  isOnline: boolean;
 }
 
 const SleepRow = memo(function SleepRow({
@@ -228,6 +241,7 @@ const SleepRow = memo(function SleepRow({
   gridTemplate,
   activeDates,
   onSetSleep,
+  isOnline,
 }: SleepRowProps) {
   return (
     <div
@@ -247,6 +261,7 @@ const SleepRow = memo(function SleepRow({
             d={d}
             hours={hours}
             onSetSleep={onSetSleep}
+            isOnline={isOnline}
           />
         );
       })}
@@ -874,6 +889,7 @@ export function TrackerBoard({ userId }: { userId: string }) {
                   gridTemplate={gridTemplate}
                   activeDates={sleepByHour.get(hours) ?? new Set()}
                   onSetSleep={setSleepDay}
+                  isOnline={isOnline}
                 />
               ))}
             </div>
